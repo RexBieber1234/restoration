@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz | RCC</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: wheat;
+      margin: 0;
+      padding: 0;
+    }
+    .nav {
+      background: linear-gradient(45deg, rgb(2, 2, 218), rgb(86, 86, 209));
+      padding: 10px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      color: white;
+    }
+    .nav a {
+      color: white;
+      text-decoration: none;
+      margin: 5px 10px;
+    }
+    .nav a:hover {
+      color: yellow;
+    }
+    h2 {
+      text-align: center;
+    }
+    #difficultyButtons button, #choices button, #quizBox button {
+      padding: 12px;
+      margin: 8px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    #quizBox, #difficultyButtons {
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      color: black;
+      border-radius: 10px;
+      margin-top: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    #choices {
+      display: flex;
+      flex-direction: column;
+    }
+    #scorePane, #mistakePane, #timer {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="nav">
+    <span><i class="fa-solid fa-church"></i> RCC Bible Quiz</span>
+    <div>
+      <a href="index.html"><i class="fa fa-home"></i> Home</a>
+      <a href="dashboard.html"><i class="fa fa-chart-line"></i> Dashboard</a>
+    </div>
+  </div>
+
+  <div id="difficultyButtons">
+    <h2><i class="fa-solid fa-layer-group"></i> Select Quiz Difficulty</h2>
+    <button onclick="startQuiz('easy')">🟢 Easy</button>
+    <button onclick="startQuiz('medium')">🟡 Medium</button>
+    <button onclick="startQuiz('hard')">🔴 Hard</button>
+  </div>
+
+  <div id="quizBox" style="display:none;">
+    <div id="question" style="font-size:1.3rem; margin-bottom:10px;">Loading...</div>
+    <div id="choices"></div>
+    <p id="scorePane"></p>
+    <p id="mistakePane"></p>
+    <p id="timer" style="color: red;"></p>
+  </div>
+
+  <script>
+    const userCode = localStorage.getItem("fellowshipID") || "ANON";
+
+    const questions = {
+      easy: [
+        { q: "What is the first book of the Bible?", a: "Genesis", choices: ["Genesis", "Exodus", "Leviticus", "Numbers"] },
+        { q: "Who built the ark?", a: "Noah", choices: ["Moses", "Noah", "David", "Abraham"] },
+        { q: "Where was Jesus born?", a: "Bethlehem", choices: ["Nazareth", "Jerusalem", "Bethlehem", "Galilee"] },
+        { q: "How many disciples did Jesus have?", a: "12", choices: ["10", "11", "12", "13"] },
+        { q: "What is the Bible?", a: "God's word", choices: ["A story", "A novel", "God's word", "A poem"] },
+        { q: "Who died on the cross?", a:"Jesus", choices:["Jesus", "Satan", "Jacob","God"] },
+        { q: "On which day did God rest?", a:"Six", choices:["Six", "five", "Seven","Eight"] },
+
+
+        // Add more...
+      ],
+      medium: [
+        { q: "Which apostle denied Jesus 3 times?", a: "Peter", choices: ["John", "Peter", "James", "Paul"] },
+        { q: "What is the 5th commandment?", a: "Honor your father and mother", choices: ["Do not steal", "Honor your father and mother", "Do not lie", "Love God"] },
+        { q: "Who led the Israelites into the promised land?", a: "Joshua", choices: ["Moses", "Aaron", "Joshua", "David"] },
+        { q: "Who wrote most of the New Testament?", a: "Paul", choices: ["Peter", "James", "Paul", "John"] },
+        // Add more...
+      ],
+      hard: [
+        { q: "How many books are in the Bible?", a: "66", choices: ["66", "72", "64", "70"] },
+        { q: "What was Paul’s original name?", a: "Saul", choices: ["Peter", "James", "Saul", "Silas"] },
+        { q: "What is the longest chapter in the Bible?", a: "Psalm 119", choices: ["Psalm 119", "Psalm 23", "John 3", "Isaiah 53"] },
+        { q: "Which Old Testament prophet saw dry bones come to life?", a: "Ezekiel", choices: ["Daniel", "Ezekiel", "Isaiah", "Jeremiah"] },
+        // Add more...
+      ]
+    };
+
+    let currentSet = [], currentQ = 0, score = 0, timeLeft = 300, timer, mistakes = [];
+
+    function startQuiz(level) {
+      currentSet = questions[level].sort(() => 0.5 - Math.random()).slice(0, 20);
+      currentQ = 0;
+      score = 0;
+      mistakes = [];
+      timeLeft = 300;
+
+      document.getElementById("difficultyButtons").style.display = "none";
+      document.getElementById("quizBox").style.display = "block";
+
+      updateTimer();
+      timer = setInterval(updateTimer, 1000);
+      showQuestion();
+    }
+
+    function showQuestion() {
+      if (currentQ >= currentSet.length) return endQuiz();
+
+      const q = currentSet[currentQ];
+      document.getElementById("question").innerText = `${currentQ + 1}. ${q.q}`;
+      const choiceDiv = document.getElementById("choices");
+      choiceDiv.innerHTML = "";
+
+      q.choices.forEach(option => {
+        const btn = document.createElement("button");
+        btn.innerText = option;
+        btn.onclick = () => {
+          if (option === q.a) score++;
+          else mistakes.push(`${q.q} (Answer: ${q.a})`);
+          currentQ++;
+          showQuestion();
+        };
+        choiceDiv.appendChild(btn);
+      });
+
+      updateScorePane();
+    }
+
+    function updateScorePane() {
+      document.getElementById("scorePane").innerHTML = `✅ Score: ${score} / ${currentQ}`;
+      document.getElementById("mistakePane").innerHTML = `❌ Mistakes: ${mistakes.length}`;
+    }
+
+    function updateTimer() {
+      const m = Math.floor(timeLeft / 60);
+      const s = timeLeft % 60;
+      document.getElementById("timer").innerText = `⏳ Time Left: ${m}:${s < 10 ? '0' : ''}${s}`;
+      if (--timeLeft < 0) endQuiz();
+    }
+
+    function endQuiz() {
+      clearInterval(timer);
+      document.getElementById("quizBox").innerHTML = `
+        <h2>Quiz Complete!</h2>
+        <p>🏆 Final Score: ${score} / 20</p>
+        <p><strong>❌ Mistakes:</strong></p>
+        <ul>${mistakes.map(m => `<li>${m}</li>`).join('')}</ul>
+        <button onclick="location.reload()">🔁 Retry</button>
+      `;
+      localStorage.setItem("quiz_score_" + userCode, score);
+    }
+  </script>
+
+</body>
+</html>

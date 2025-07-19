@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Church Fellowships</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      color: white;
+      background-color: wheat;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .nav {
+      background: linear-gradient(45deg, rgb(2, 2, 218), rgb(86, 86, 209));
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .nav img.nav-img {
+      border-radius: 10rem;
+      height: 50px;
+      margin-right: 10px;
+    }
+
+    .nav-brand {
+      font-size: 1.2rem;
+      color: white;
+      flex: 1;
+      margin-right: 65px;
+    }
+
+    .nav-links {
+      color: white;
+      text-decoration: none;
+      margin: 5px 10px;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links:hover {
+      color: yellow;
+    }
+
+    .fa {
+      margin-right: 6px;
+    }
+
+    #UserDetails {
+      background: linear-gradient(45deg,#66bfbf,rgb(94, 94, 146));
+      color: white;
+      padding: 15px;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .Church-cartegories {
+      background-color: white;
+      color: black;
+      padding: 40px;
+      margin: 50px auto;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 20px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .Church-cartegories h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .Church-cartegories button {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn1 { background-color: yellow; color: white; }
+    .btn1:hover { background-color: white; color: yellow; }
+
+    .btn2 { background-color: blue; color: white; }
+    .btn2:hover { background-color: white; color: blue; }
+
+    .btn3 { background: linear-gradient(45deg, rgb(230, 230, 5), blue); color: white; }
+    .btn3:hover { background: linear-gradient(45deg, blue, yellow); }
+
+    .btn4 { background-color: orange; color: white; }
+    .btn4:hover { background-color: white; color: orange; }
+
+    .btn5 { background: linear-gradient(45deg, blue, yellow); color: white; }
+    .btn5:hover { background: linear-gradient(45deg, yellow, blue, orange); }
+
+    @media screen and (max-width: 768px) {
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav a {
+        width: 100%;
+        margin: 5px 0;
+      }
+
+      .Church-cartegories {
+        width: 90%;
+      }
+    }
+
+    .about {
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .about-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      background: #fff;
+      color: #333;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .about-entry img {
+      width: 150px;
+      height: 150px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .about-entry span {
+      flex: 1;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="nav" id="home">
+    <img class="nav-img" src="pic.JPG" alt="Church Logo" />
+    <span class="nav-brand"><i>Restoration Christian Church</i></span>
+    <a class="nav-links" href="#home"><i class="fa-solid fa-house"></i> Home</a>
+    <a class="nav-links" href="#about"><i class="fa-solid fa-book"></i> About</a>
+    <a class="nav-links" href="#events"><i class="fa-solid fa-calendar-days"></i> Events</a>
+    <a class="nav-links" href="#"><i class="fa-solid fa-user-plus"></i> Join</a>
+    <a class="nav-links" href="quiz.html"><i class="fa-solid fa-puzzle-piece"></i> Bible Quiz</a>
+    <a class="nav-links" href="trivia.html"><i class="fa-solid fa-brain"></i> Trivia</a>
+    <a class="nav-links" href="video-call.html"><i class="fa-solid fa-video"></i> Video Call</a>
+    <a class="nav-links" href="admin.html"><i class="fa-regular fa-user-circle"></i> Admin</a>
+  </div>
+
+  <div id="UserDetails"></div>
+  <div id="adminPostedContent"></div>
+
+  <div class="Church-cartegories">
+    <h1><i class="fa-solid fa-hands-praying"></i> Fellowships</h1>
+    <a href="mens.html"><button class="btn1"><i class="fa-solid fa-person"></i> Mens' Fellowship</button></a>
+    <a href="womens.html"><button class="btn2"><i class="fa-solid fa-person-dress"></i> Womens' Fellowship</button></a>
+    <a href="youth.html"><button class="btn3"><i class="fa-solid fa-users"></i> Youths' Fellowship</button></a>
+    <a href="junior.html"><button class="btn4"><i class="fa-solid fa-child"></i> Junior Youth</button></a>
+    <a href="sunday.html"><button class="btn5"><i class="fa-solid fa-face-smile"></i> Sunday School</button></a>
+  </div>
+
+  <div class="about" id="about"></div>
+
+  <script>
+    const userDetails = document.getElementById("UserDetails");
+    const username = localStorage.getItem("username");
+    const role = localStorage.getItem("loginType");
+    let userID = localStorage.getItem("fellowshipID");
+
+    if (!username || role !== "user") {
+      alert("⚠️ Only logged-in users can access this page.");
+      window.location.href = "index.html";
+    } else {
+      if (!userID) {
+        const initials = username.split(" ").map(n => n[0].toUpperCase()).join("");
+        const randomNum = Math.floor(100 + Math.random() * 900);
+        userID = `${initials}-${randomNum}`;
+        localStorage.setItem("fellowshipID", userID);
+      }
+
+      userDetails.innerHTML = `
+        <i class="fa-solid fa-user"></i> <b>Name:</b> ${username}<br>
+        <i class="fa-solid fa-lock"></i> <b>Role:</b> ${role}<br>
+        <i class="fa-solid fa-id-badge"></i> <b>Fellowship ID:</b> ${userID}
+      `;
+
+      const speak = new SpeechSynthesisUtterance(`Welcome ${username}. Your Fellowship ID is ${userID}`);
+      speak.lang = "en-US";
+      window.speechSynthesis.speak(speak);
+
+      const tracked = JSON.parse(localStorage.getItem("joinedUsers")) || [];
+      const exists = tracked.find(u => u.id === userID);
+      if (!exists) {
+        tracked.push({ name: username, id: userID, page: "fellowships" });
+        localStorage.setItem("joinedUsers", JSON.stringify(tracked));
+      }
+    }
+
+    const adminContent = localStorage.getItem("admin_post_fellowships");
+    if (adminContent) {
+      document.getElementById("adminPostedContent").innerHTML = `
+        <h3 style="text-align:center; color:white;"><i class="fa-solid fa-bullhorn"></i> Admin Message</h3>
+        <div style="background:white; color:black; padding:15px; margin:20px; border-radius:8px;">
+          ${adminContent}
+        </div>`;
+    }
+
+    // Leadership Section Logic
+    const aboutSection = document.querySelector(".about");
+
+    function createLeaderEntry(id, imgData = "pic.JPG", text = "Leader description...") {
+      const entryDiv = document.createElement("div");
+      entryDiv.className = "about-entry";
+      entryDiv.id = id;
+
+      const img = document.createElement("img");
+      img.src = imgData;
+      img.alt = "Leader Image";
+
+      const textSpan = document.createElement("span");
+      textSpan.textContent = text;
+
+      entryDiv.appendChild(img);
+      entryDiv.appendChild(textSpan);
+
+      // Admin controls
+      if (role === "admin") {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "image/*";
+        fileInput.style.marginBottom = "10px";
+
+        const textArea = document.createElement("textarea");
+        textArea.rows = 4;
+        textArea.style.width = "100%";
+        textArea.value = text;
+
+        fileInput.onchange = (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              img.src = reader.result;
+              saveEntry(id, reader.result, textArea.value);
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+
+        textArea.oninput = () => {
+          textSpan.textContent = textArea.value;
+          saveEntry(id, img.src, textArea.value);
+        };
+
+        entryDiv.appendChild(fileInput);
+        entryDiv.appendChild(textArea);
+      }
+
+      aboutSection.appendChild(entryDiv);
+    }
+
+    function saveEntry(id, img, text) {
+      const saved = JSON.parse(localStorage.getItem("leaders") || "[]");
+      const existing = saved.find(e => e.id === id);
+      if (existing) {
+        existing.img = img;
+        existing.text = text;
+      } else {
+        saved.push({ id, img, text });
+      }
+      localStorage.setItem("leaders", JSON.stringify(saved));
+    }
+
+    function loadAllLeaders() {
+      const saved = JSON.parse(localStorage.getItem("leaders") || "[]");
+      saved.forEach(entry => {
+        createLeaderEntry(entry.id, entry.img, entry.text);
+      });
+    }
+
+    if (role === "admin") {
+      const addBtn = document.createElement("button");
+      addBtn.textContent = "➕ Add Leader";
+      addBtn.style.margin = "30px auto";
+      addBtn.style.padding = "10px 20px";
+      addBtn.style.display = "block";
+      addBtn.style.fontSize = "1rem";
+      addBtn.style.border = "none";
+      addBtn.style.borderRadius = "8px";
+      addBtn.style.cursor = "pointer";
+      addBtn.style.backgroundColor = "#003366";
+      addBtn.style.color = "white";
+
+      addBtn.onclick = () => {
+        const newId = "entry-" + Date.now();
+        createLeaderEntry(newId);
+      };
+
+      document.body.insertBefore(addBtn, aboutSection);
+    }
+
+    loadAllLeaders();
+  </script>
+</body>
+</html>

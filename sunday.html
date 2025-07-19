@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sunday School</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body { background-color: wheat; font-family: Arial; margin: 0; color: black; }
+    .nav { background: linear-gradient(45deg, #2222aa, #5555dd); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; color: white; }
+    .nav a { color: white; margin: 0 10px; text-decoration: none; }
+    .nav a:hover { color: yellow; }
+    #UserDetails { background: #333; color: white; text-align: center; padding: 15px; }
+    .fellowship-content { background: white; margin: 30px auto; padding: 25px; max-width: 600px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.2); }
+    .admin-message { background: #f8f8f8; padding: 15px; margin-top: 20px; border-left: 6px solid orange; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <span><i class="fa-solid fa-church"></i> Sunday School</span>
+    <a href="index1.html" class="nav-links"><i class="fa-solid fa-house"></i> Home</a>
+  <a href="admin.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
+</div>
+
+<div id="UserDetails"></div>
+
+<div class="fellowship-content">
+  <h2><i class="fa-solid fa-person-chalkboard"></i> Welcome to Sunday School</h2>
+  <div id="adminPostedContent"></div>
+</div>
+
+<script>
+  const username = localStorage.getItem("username");
+  const role = localStorage.getItem("loginType");
+  let userID = localStorage.getItem("sundayFellowshipID");
+
+  if (!username || role !== "user") {
+    alert("⚠️ Only logged-in users can access this page.");
+    window.location.href = "index.html";
+  } else {
+    if (!userID) {
+      const initials = username.split(" ").map(n => n[0].toUpperCase()).join("");
+      userID = `${initials}-${Math.floor(100 + Math.random() * 900)}`;
+      localStorage.setItem("sundayFellowshipID", userID);
+    }
+
+    document.getElementById("UserDetails").innerHTML = `
+      <i class="fa-solid fa-user"></i> <b>Name:</b> ${username} &nbsp;
+      <i class="fa-solid fa-lock"></i> <b>Role:</b> ${role} &nbsp;
+      <i class="fa-solid fa-id-badge"></i> <b>Fellowship ID:</b> ${userID}
+    `;
+
+    speechSynthesis.speak(new SpeechSynthesisUtterance(`Welcome ${username}. Your Fellowship ID is ${userID}`));
+
+    const tracked = JSON.parse(localStorage.getItem("joinedUsers")) || [];
+    if (!tracked.find(u => u.id === userID)) {
+      tracked.push({ name: username, id: userID, page: "sunday" });
+      localStorage.setItem("joinedUsers", JSON.stringify(tracked));
+    }
+  }
+
+  const msg = localStorage.getItem("admin_post_sunday");
+  if (msg) {
+    document.getElementById("adminPostedContent").innerHTML = `
+      <div class="admin-message">
+        <h3><i class="fa-solid fa-bullhorn"></i> Admin Message</h3>
+        <p>${msg}</p>
+      </div>`;
+  }
+</script>
+</body>
+</html>

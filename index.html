@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RCC | Login Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: Arial;
+      background: wheat;
+      padding: 40px;
+      text-align: center;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1rem;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    #info {
+      color: red;
+      font-weight: bold;
+    }
+    #adminPassword {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <form id="loginForm">
+    <h2><i class="fa-solid fa-user-circle"></i> Login</h2>
+    <input type="text" id="username" placeholder="Enter your name" required />
+    
+    <select id="loginType">
+      <option value="">Select Role</option>
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <input type="password" id="adminPassword" placeholder="Enter Admin Password" />
+
+    <button type="submit">Login</button>
+    <p id="info"></p>
+  </form>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const info = document.getElementById("info");
+    const adminPassInput = document.getElementById("adminPassword");
+    const loginTypeSelect = document.getElementById("loginType");
+
+    loginTypeSelect.addEventListener("change", () => {
+      if (loginTypeSelect.value === "admin") {
+        adminPassInput.style.display = "block";
+      } else {
+        adminPassInput.style.display = "none";
+      }
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const loginType = loginTypeSelect.value;
+      const adminPass = adminPassInput.value.trim();
+
+      if (!username || !loginType) {
+        info.textContent = "⚠️ Fill in all fields.";
+        return;
+      }
+
+      if (loginType === "admin" && adminPass.toLowerCase() !== "password") {
+        info.textContent = "❌ Incorrect admin password.";
+        return;
+      }
+
+      localStorage.setItem("username", username);
+      localStorage.setItem("loginType", loginType);
+
+      if (loginType === "admin") {
+        window.location.href = "admin.html";
+      } else {
+        window.location.href = "index1.html";
+      }
+    });
+  </script>
+</body>
+</html>

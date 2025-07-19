@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Youth Fellowship</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body { font-family: Arial; background: wheat; margin: 0; }
+    .nav { background: linear-gradient(45deg, navy, dodgerblue); padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .nav img { border-radius: 50%; height: 50px; }
+    .nav-brand, .nav-links { color: white; margin: 5px 10px; text-decoration: none; }
+    .nav-links:hover { color: yellow; }
+    #UserDetails { background: #333; color: white; padding: 10px; text-align: center; }
+    .content-box { background: white; margin: 20px auto; width: 90%; max-width: 600px; padding: 20px; border-radius: 15px; }
+    .messages { background: #f9f9f9; padding: 10px; border-radius: 10px; margin-top: 20px; }
+    .message { background: #fff; padding: 8px; margin: 5px 0; border-radius: 6px; position: relative; }
+    .message span { font-weight: bold; }
+    .message button { position: absolute; right: 8px; top: 8px; background: red; color: white; border: none; border-radius: 3px; cursor: pointer; }
+    #msgInput { width: 100%; padding: 8px; font-size: 16px; margin-top: 10px; border-radius: 8px; }
+    #sendBtn { padding: 10px 20px; font-size: 16px; margin-top: 5px; border-radius: 8px; background: green; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <script>
+    const username = localStorage.getItem("username");
+    const role = localStorage.getItem("loginType");
+    const myID = localStorage.getItem("fellowshipID");
+    const deleted = JSON.parse(localStorage.getItem("deletedUsers") || "[]");
+
+    if (!username || !role || role !== "user") {
+      alert("⛔ Only users can access this page.");
+      window.location.href = "index.html";
+    } else if (deleted.includes(myID)) {
+      alert("⛔ You were removed by admin.");
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+  </script>
+
+  <div class="nav">
+    <img src="pic.JPG" alt="Logo" />
+    <span class="nav-brand"><i>Restoration Christian Church</i></span>
+    <a class="nav-links" href="fellowships.html">Fellowships</a>
+    <a class="nav-links" href="admin.html">Admin</a>
+  </div>
+
+  <div id="UserDetails"></div>
+
+<div class="content-box">
+ <h2><i class="fas fa-user-tie"></i> Mens Fellowship</h2>
+<p>Welcome to the Men's Fellowship. Stay connected and inspired in faith and brotherhood.</p>
+
+  <div class="messages">
+    <h3>🗣 Admin Messages</h3>
+    <div id="msgBox"></div>
+    <div id="adminControls" style="display:none;">
+      <input type="text" id="msgInput" placeholder="Post message..."/>
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+</div>
+
+  <script>
+    document.getElementById("UserDetails").innerHTML = `
+      👤 <b>Name:</b> ${username}<br>
+      🔐 <b>Role:</b> ${role}<br>
+      🆔 <b>ID:</b> ${myID}
+    `;
+
+    const input = document.getElementById("msgInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const allMessages = document.getElementById("allMessages");
+
+    let messages = JSON.parse(localStorage.getItem("youthMessages") || "[]");
+
+    function displayMessages() {
+      allMessages.innerHTML = "";
+      messages.forEach((msg, index) => {
+        if (msg.id === myID) {
+          allMessages.innerHTML += `<div class="message">
+            <span>${msg.name}:</span> ${msg.text}
+            <button onclick="deleteMessage(${index})">x</button>
+          </div>`;
+        }
+      });
+    }
+
+    function deleteMessage(i) {
+      messages.splice(i, 1);
+      localStorage.setItem("youthMessages", JSON.stringify(messages));
+      displayMessages();
+    }
+
+    sendBtn.onclick = () => {
+      const text = input.value.trim();
+      if (text) {
+        messages.push({ name: username, id: myID, text });
+        localStorage.setItem("youthMessages", JSON.stringify(messages));
+        input.value = "";
+        displayMessages();
+      }
+    };
+
+    displayMessages();
+  </script>
+</body>
+</html>
