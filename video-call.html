@@ -1,168 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat & Call (PeerJS)</title>
+  <meta charset="UTF-8">
+  <title>Real-Time Chat & Video Call</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family:sans-serif; margin:0; display:flex; flex-direction:column; align-items:center; background:#f2f2f2; }
-    header { background:#3f51b5; color:white; width:100%; text-align:center; padding:15px; font-size:20px; }
-    #roomPrompt, #mainApp { max-width:800px; width:100%; padding:10px; }
-    #mainApp { display:none; flex-direction:column; align-items:center; }
-    video { max-width:500px; margin:10px; border-radius:10px; background:black; display:none; }
-    #chatBox {
-      width:100%; max-height:250px; overflow-y:auto;
-      background:white; padding:10px; border-radius:10px;
-      box-shadow:inset 0 0 5px rgba(0,0,0,0.1); margin-top:10px;
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f9;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
     }
-    .msg { padding:8px 10px; margin-bottom:7px; border-radius:6px; background:#e3e3e3; position:relative; animation:fadeIn 0.3s ease-in; }
-    .msg.me { background:#d1e7dd; }
-    .deleteBtn { position:absolute; right:5px; top:5px; background:none; border:none; color:#d11a2a; cursor:pointer; font-size:16px; }
-    .deleteBtn:hover { color:#a50000; }
-    @keyframes fadeIn {
-      from { opacity:0; transform:translateY(10px); }
-      to { opacity:1; transform:translateY(0); }
+    nav {
+      background: #2d89ef;
+      padding: 10px 20px;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    #chatInput { display:flex; width:100%; margin-top:10px; }
-    #msgTxt { flex:1; padding:10px; border:1px solid #ccc; border-radius:5px; font-size:16px; }
-    #sendBtn { margin-left:5px; background:#3f51b5; color:white; border:none; padding:10px 15px; border-radius:5px; }
-    #roomInput, select { padding:10px; border:1px solid black; border-radius:5px; margin:5px 0; width:100%; }
+    nav span {
+      cursor: pointer;
+    }
+    #chat-section, #video-section {
+      display: none;
+      padding: 20px;
+    }
+    .message {
+      background: #fff;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 8px;
+      position: relative;
+    }
+    .delete-btn {
+      position: absolute;
+      right: 10px;
+      top: 5px;
+      font-size: 12px;
+      color: red;
+      cursor: pointer;
+    }
+    #chat-box {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: white;
+    }
+    .hidden { display: none; }
+    button, input {
+      padding: 8px;
+      margin: 5px 0;
+    }
+    video {
+      width: 100%;
+      max-height: 300px;
+      background: black;
+      border-radius: 8px;
+    }
+    @media (max-width: 600px) {
+      nav { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
 
-<header>🎤 Chat & Call App (Choose Audio or Video)</header>
+<nav>
+  <div>📞 Fellowship Chat</div>
+  <span onclick="showSection('chat')">Chat</span>
+  <span onclick="showSection('video')">Video Call</span>
+</nav>
 
-<div id="roomPrompt">
-  <p>Enter shared room code:</p>
-  <input type="text" id="roomInput" placeholder="e.g. 12345" />
-  <select id="modeSelect">
-    <option value="video">🎥 Video Call</option>
-    <option value="audio">🔊 Audio Only</option>
-  </select>
-  <button id="joinBtn">Join Room</button>
+<div id="auth" style="padding:20px;">
+  <h2>Enter your unique user code</h2>
+  <input type="text" id="userCode" placeholder="e.g., ABC123" />
+  <button onclick="verifyCode()">Start</button>
 </div>
 
-<div id="mainApp">
-  <h2>Room: <span id="roomLabel"></span></h2>
+<div id="chat-section">
+  <h2>Chat Room (Code: <span id="room-code"></span>)</h2>
+  <div id="chat-box"></div>
+  <input type="text" id="messageInput" placeholder="Enter message..." />
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+<div id="video-section">
+  <h2>Video Call (Code: <span id="video-room-code"></span>)</h2>
   <video id="localVideo" autoplay muted></video>
   <video id="remoteVideo" autoplay></video>
-
-  <div id="chatBox"></div>
-
-  <div id="chatInput">
-    <input type="text" id="msgTxt" placeholder="Type a message..." />
-    <button id="sendBtn">Send</button>
-  </div>
+  <button onclick="startCall()">Start Call</button>
 </div>
-
-<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
 <script>
-  let roomCode, peer, conn, call, localStream;
-  const roomInput = document.getElementById("roomInput");
-  const joinBtn = document.getElementById("joinBtn");
-  const modeSelect = document.getElementById("modeSelect");
-  const roomPrompt = document.getElementById("roomPrompt");
-  const mainApp = document.getElementById("mainApp");
-  const roomLabel = document.getElementById("roomLabel");
-  const localVideo = document.getElementById("localVideo");
-  const remoteVideo = document.getElementById("remoteVideo");
-  const chatBox = document.getElementById("chatBox");
-  const msgTxt = document.getElementById("msgTxt");
-  const sendBtn = document.getElementById("sendBtn");
+  let userCode = '';
+  let messages = JSON.parse(localStorage.getItem("messages") || "[]");
+  let peer, conn, peerConnection, localStream;
 
-  joinBtn.onclick = async () => {
-    roomCode = roomInput.value.trim();
-    if (!roomCode) return alert("Enter code");
-    const mode = modeSelect.value;
-
-    // Request correct media stream
-    try {
-      localStream = await navigator.mediaDevices.getUserMedia({
-        video: mode === "video",
-        audio: true
-      });
-    } catch (err) {
-      return alert("Failed to access microphone/camera: " + err.message);
+  function verifyCode() {
+    userCode = document.getElementById("userCode").value.trim();
+    if (!userCode) {
+      alert("Enter a valid code!");
+      return;
     }
 
-    // Show video if video mode
-    if (mode === "video") {
-      localVideo.srcObject = localStream;
-      localVideo.style.display = "block";
-      remoteVideo.style.display = "block";
-    }
-
-    roomPrompt.style.display = "none";
-    mainApp.style.display = "flex";
-    roomLabel.textContent = roomCode;
-
-    setupPeer();
-  };
-
-  function setupPeer() {
-    peer = new Peer(roomCode, {
-      host: 'peerjs.com',
-      port: 443,
-      secure: true
+    // Start PeerJS with userCode as ID
+    peer = new Peer(userCode, {
+      debug: 2
     });
 
     peer.on('open', () => {
-      conn = peer.connect(roomCode + '_chat');
-      conn.on('open', () => {
-        conn.on('data', msg => showMsg(msg, false));
+      console.log('PeerJS connected with ID:', peer.id);
+    });
+
+    peer.on('connection', (c) => {
+      conn = c;
+      setupConnection();
+    });
+
+    peer.on('call', (call) => {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+        localStream = stream;
+        document.getElementById("localVideo").srcObject = stream;
+        call.answer(stream); // Answer call with our stream
+
+        call.on('stream', remoteStream => {
+          document.getElementById("remoteVideo").srcObject = remoteStream;
+        });
       });
     });
 
-    peer.on('connection', connection => {
-      conn = connection;
-      conn.on('data', msg => showMsg(msg, false));
-    });
-
-    peer.on('call', incoming => {
-      call = incoming;
-      call.answer(localStream);
-      call.on('stream', stream => {
-        remoteVideo.srcObject = stream;
-        if (modeSelect.value === "video") remoteVideo.style.display = "block";
-      });
-    });
-
-    // Try to connect after short delay
-    setTimeout(() => {
-      call = peer.call(roomCode, localStream);
-      call.on('stream', stream => {
-        remoteVideo.srcObject = stream;
-        if (modeSelect.value === "video") remoteVideo.style.display = "block";
-      });
-    }, 3000);
+    document.getElementById("auth").style.display = 'none';
+    document.getElementById("chat-section").style.display = 'block';
+    document.getElementById("room-code").textContent = userCode;
+    document.getElementById("video-room-code").textContent = userCode;
+    displayMessages();
   }
 
-  sendBtn.onclick = () => {
-    if (!conn || conn.open === false) return alert("Not connected");
-    const text = msgTxt.value.trim();
-    if (!text) return;
-    conn.send(text);
-    showMsg(text, true);
-    msgTxt.value = '';
-  };
+  function showSection(section) {
+    document.getElementById("chat-section").style.display = 'none';
+    document.getElementById("video-section").style.display = 'none';
+    document.getElementById(section + '-section').style.display = 'block';
+  }
 
-  function showMsg(text, isMe) {
-    const div = document.createElement('div');
-    div.className = 'msg' + (isMe ? ' me' : '');
-    div.innerHTML = (isMe ? 'Me: ' : 'Peer: ') + `<span>${text}</span>`;
+  function sendMessage() {
+    let msg = document.getElementById("messageInput").value.trim();
+    if (!msg) return;
+    const entry = { code: userCode, msg: msg, id: Date.now() };
+    messages.push(entry);
+    localStorage.setItem("messages", JSON.stringify(messages));
+    document.getElementById("messageInput").value = '';
+    displayMessages();
+    if (conn) conn.send(entry); // Send to other peer
+  }
 
-    if (isMe) {
-      const btn = document.createElement('button');
-      btn.innerHTML = '🗑️';
-      btn.className = 'deleteBtn';
-      btn.onclick = () => div.remove();
-      div.appendChild(btn);
-    }
+  function deleteMessage(id) {
+    messages = messages.filter(m => m.id !== id);
+    localStorage.setItem("messages", JSON.stringify(messages));
+    displayMessages();
+  }
 
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
+  function displayMessages() {
+    const box = document.getElementById("chat-box");
+    box.innerHTML = '';
+    messages.filter(m => m.code === userCode).forEach(entry => {
+      const div = document.createElement("div");
+      div.className = 'message';
+      div.innerHTML = `
+        ${entry.msg}
+        <span class='delete-btn' onclick="deleteMessage(${entry.id})">✖</span>
+      `;
+      box.appendChild(div);
+    });
+  }
+
+  function setupConnection() {
+    conn.on('data', function (data) {
+      messages.push(data);
+      localStorage.setItem("messages", JSON.stringify(messages));
+      displayMessages();
+    });
+  }
+
+  function startCall() {
+    const partnerCode = prompt("Enter partner's code:");
+    if (!partnerCode) return;
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+      localStream = stream;
+      document.getElementById("localVideo").srcObject = stream;
+
+      const call = peer.call(partnerCode, stream);
+      call.on('stream', remoteStream => {
+        document.getElementById("remoteVideo").srcObject = remoteStream;
+      });
+
+      conn = peer.connect(partnerCode);
+      conn.on('open', setupConnection);
+    });
   }
 </script>
+
 </body>
 </html>
