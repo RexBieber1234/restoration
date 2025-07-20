@@ -2,187 +2,217 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RCC CALL PAGE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <style>
     body {
-      background: #111;
+      background: #121212;
       color: #fff;
-      text-align: center;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      text-align: center;
     }
     h2 {
-      margin: 20px 10px;
-    }
-    #my-id {
-      font-weight: bold;
-      color: #4caf50;
-    }
-    #peer-id-input, button {
-      margin: 10px;
-      padding: 10px;
-      font-size: 16px;
+      background: #1f1f1f;
+      padding: 15px;
+      margin: 0;
     }
     #videos {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 10px;
       padding: 10px;
+    }
+    .video-box {
+      position: relative;
+      margin: 10px;
     }
     video {
       width: 100%;
       max-width: 300px;
+      border: 2px solid #444;
       border-radius: 10px;
-      border: 2px solid #333;
     }
-    .video-container {
-      position: relative;
-      width: 45%;
+    .video-name {
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+      background: rgba(0,0,0,0.6);
+      padding: 2px 6px;
+      font-size: 14px;
+      border-radius: 5px;
     }
     .controls {
       margin-top: 10px;
     }
-    .controls button {
-      background: #222;
-      color: white;
-      border: none;
-      margin: 5px;
+    button, input {
       padding: 10px;
-      font-size: 18px;
-      border-radius: 6px;
-      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
     }
-    .controls button:hover {
-      background: #333;
+    .share-buttons {
+      margin-top: 10px;
     }
-    @media (max-width: 768px) {
-      .video-container {
-        width: 90%;
+    @media screen and (max-width: 600px) {
+      video {
+        max-width: 100%;
       }
     }
   </style>
 </head>
 <body>
 
-  <h2>Call a friend by sharing the code (ID) below</h2>
-  <p>Your ID: <span id="my-id">Loading...</span></p>
-  <input id="peer-id-input" placeholder="Enter Peer ID to call" />
-  <button id="call-btn">Call</button>
+<h2>📞 Call a friend by sharing the code (ID) below</h2>
+<p>Your ID: <span id="my-id">Loading...</span></p>
+<p>Call Duration: <span id="call-duration">00:00</span></p>
+<input id="peer-id-input" placeholder="Enter Peer ID to call" />
+<button id="call-btn"><i class="fas fa-phone"></i> Call</button>
+<button id="exit-btn"><i class="fas fa-sign-out-alt"></i> Exit</button>
 
-  <div id="videos"></div>
+<div class="share-buttons">
+  <button onclick="copyLink()"><i class="fas fa-copy"></i> Copy Link</button>
+  <a id="whatsapp-share" target="_blank">
+    <button><i class="fab fa-whatsapp"></i> Share on WhatsApp</button>
+  </a>
+</div>
 
-  <div class="controls">
-    <button id="mute-btn"><i class="fas fa-microphone-slash"></i> Mute</button>
-    <button id="video-btn"><i class="fas fa-video-slash"></i> Camera Off</button>
-    <button id="leave-btn"><i class="fas fa-phone-slash"></i> Leave Call</button>
-  </div>
+<div id="videos"></div>
 
-  <script>
-    const myIdSpan = document.getElementById("my-id");
-    const peerIdInput = document.getElementById("peer-id-input");
-    const callBtn = document.getElementById("call-btn");
-    const videosDiv = document.getElementById("videos");
-    const muteBtn = document.getElementById("mute-btn");
-    const videoBtn = document.getElementById("video-btn");
-    const leaveBtn = document.getElementById("leave-btn");
+<script>
+  const maxUsers = 6;
+  const videoContainer = document.getElementById("videos");
+  const myIdSpan = document.getElementById("my-id");
+  const callBtn = document.getElementById("call-btn");
+  const peerIdInput = document.getElementById("peer-id-input");
+  const exitBtn = document.getElementById("exit-btn");
+  const callDuration = document.getElementById("call-duration");
 
-    const peer = new Peer(); // PeerJS cloud server
-    const connections = new Set();
-    const videoMap = new Map();
-    let localStream;
-    let muted = false;
-    let videoOn = true;
-    let peerId = null;
+  let localStream, myId, callTimer;
+  const peer = new Peer();
+  const connections = {};
+  const joinedIds = new Set();
 
-    peer.on("open", id => {
-      peerId = id;
-      myIdSpan.textContent = id;
-    });
+  function createVideoBox(id, stream, label = "User") {
+    if (document.getElementById("video-" + id)) return;
 
-    peer.on("call", call => {
-      if (connections.size >= 6 || connections.has(call.peer)) return;
+    const box = document.createElement("div");
+    box.className = "video-box";
+    box.id = "video-" + id;
 
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-        localStream = localStream || stream;
-        call.answer(stream);
-        addVideoStream(call.peer, stream, true);
+    const video = document.createElement("video");
+    video.autoplay = true;
+    video.playsInline = true;
+    video.srcObject = stream;
+    if (id === myId) video.muted = true;
 
-        call.on("stream", remoteStream => {
-          addVideoStream(call.peer, remoteStream, false);
-        });
+    const name = document.createElement("div");
+    name.className = "video-name";
+    name.innerText = label;
 
-        call.on("close", () => removeVideoStream(call.peer));
-        connections.add(call.peer);
-      });
-    });
+    box.appendChild(video);
+    box.appendChild(name);
+    videoContainer.appendChild(box);
+  }
 
-    callBtn.onclick = async () => {
-      const targetId = peerIdInput.value.trim();
-      if (!targetId || targetId === peerId || connections.has(targetId) || connections.size >= 6) return alert("Invalid or duplicate ID");
-
-      if (!localStream) {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        addVideoStream(peerId, localStream, true);
-      }
-
-      const call = peer.call(targetId, localStream);
-      call.on("stream", remoteStream => {
-        addVideoStream(targetId, remoteStream, false);
-      });
-      call.on("close", () => removeVideoStream(targetId));
-      connections.add(targetId);
-    };
-
-    function addVideoStream(id, stream, isLocal) {
-      if (videoMap.has(id)) return;
-
-      const container = document.createElement("div");
-      container.className = "video-container";
-      container.id = "vid-" + id;
-
-      const video = document.createElement("video");
-      video.autoplay = true;
-      video.playsInline = true;
-      if (isLocal) video.muted = true;
-      video.srcObject = stream;
-
-      container.appendChild(video);
-      videosDiv.appendChild(container);
-      videoMap.set(id, container);
-    }
-
-    function removeVideoStream(id) {
-      const container = videoMap.get(id);
-      if (container) {
-        container.remove();
-        videoMap.delete(id);
-        connections.delete(id);
+  function removeVideoBox(id, message = null) {
+    const box = document.getElementById("video-" + id);
+    if (box) {
+      const label = box.querySelector('.video-name');
+      if (message) {
+        label.innerText = message;
+      } else {
+        box.remove();
       }
     }
+  }
 
-    muteBtn.onclick = () => {
-      muted = !muted;
-      localStream.getAudioTracks().forEach(track => track.enabled = !muted);
-      muteBtn.innerHTML = muted ? '<i class="fas fa-microphone"></i> Unmute' : '<i class="fas fa-microphone-slash"></i> Mute';
-    };
+  function updateShareLinks() {
+    const url = `${location.href}#${myId}`;
+    document.getElementById("whatsapp-share").href =
+      `https://wa.me/?text=Join my call: ${url}`;
+  }
 
-    videoBtn.onclick = () => {
-      videoOn = !videoOn;
-      localStream.getVideoTracks().forEach(track => track.enabled = videoOn);
-      videoBtn.innerHTML = videoOn ? '<i class="fas fa-video-slash"></i> Camera Off' : '<i class="fas fa-video"></i> Camera On';
-    };
+  function copyLink() {
+    const link = `${location.href}#${myId}`;
+    navigator.clipboard.writeText(link);
+    alert("Link copied!");
+  }
 
-    leaveBtn.onclick = () => {
-      peer.disconnect();
-      peer.destroy();
-      alert("You left the call.");
-      window.location.reload();
-    };
-  </script>
+  function formatTime(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
+
+  function startTimer() {
+    let secs = 0;
+    callTimer = setInterval(() => {
+      secs++;
+      callDuration.innerText = formatTime(secs);
+    }, 1000);
+  }
+
+  peer.on("open", id => {
+    myId = id;
+    myIdSpan.innerText = id;
+    updateShareLinks();
+  });
+
+  navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+    localStream = stream;
+    createVideoBox(myId, stream, "Me");
+  });
+
+  peer.on("call", call => {
+    if (Object.keys(connections).length >= maxUsers - 1) {
+      alert("Max users reached");
+      return call.close();
+    }
+
+    call.answer(localStream);
+    call.on("stream", remoteStream => {
+      connections[call.peer] = call;
+      joinedIds.add(call.peer);
+      createVideoBox(call.peer, remoteStream, "Friend");
+    });
+
+    call.on("close", () => {
+      removeVideoBox(call.peer, "User has exited");
+      joinedIds.delete(call.peer);
+      delete connections[call.peer];
+    });
+  });
+
+  callBtn.onclick = async () => {
+    const peerId = peerIdInput.value.trim();
+    if (!peerId || peerId === myId) return;
+
+    if (joinedIds.has(peerId)) return alert("Already connected.");
+    if (Object.keys(connections).length >= maxUsers - 1) return alert("Max users reached");
+
+    const call = peer.call(peerId, localStream);
+    call.on("stream", remoteStream => {
+      connections[peerId] = call;
+      joinedIds.add(peerId);
+      createVideoBox(peerId, remoteStream, "Friend");
+      if (!callTimer) startTimer();
+    });
+
+    call.on("close", () => {
+      removeVideoBox(peerId, "User has exited");
+      joinedIds.delete(peerId);
+      delete connections[peerId];
+    });
+  };
+
+  exitBtn.onclick = () => {
+    Object.values(connections).forEach(call => call.close());
+    removeVideoBox(myId, "You exited");
+    if (callTimer) clearInterval(callTimer);
+  };
+</script>
 </body>
 </html>
