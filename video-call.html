@@ -2,216 +2,117 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Secure Group Video Call</title>
+  <title>Zoom-Like Group Video Call</title>
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: #fff;
-    }
-    header {
-      background: #1f1f1f;
-      padding: 10px;
-      display: flex;
-      justify-content: space-between;
-    }
-    button, input {
-      padding: 8px;
-      margin: 4px;
-      border: none;
-      border-radius: 4px;
-    }
-    .dark-mode body {
-      background: #fff;
-      color: #000;
-    }
-    video {
-      width: 200px;
-      height: 150px;
-      margin: 5px;
-      background: black;
-    }
-    #videos {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    #status {
-      margin: 10px;
-      font-size: 14px;
-    }
+    body { background: #121212; color: white; text-align: center; font-family: sans-serif; margin: 0; padding: 20px; }
+    #videos { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 20px; }
+    video { width: 100%; border-radius: 10px; border: 2px solid #333; background: black; }
+    #controls { margin-top: 15px; }
+    button, input { padding: 10px; font-size: 16px; margin: 5px; border: none; border-radius: 5px; }
+    button { background: #333; color: white; cursor: pointer; }
+    button:hover { background: #555; }
   </style>
 </head>
 <body>
+  <h1>🎥 Group Video Call (Max 6 Users)</h1>
+  <p>Your ID: <span id="my-id">Loading...</span></p>
+  <input id="room-id" placeholder="Enter Room ID" />
+  <button onclick="joinRoom()">Join</button>
 
-<header>
-  <div>
-    <button onclick="toggleDarkMode()">🌙 Dark Mode</button>
-    <button onclick="logout()">🔓 Logout</button>
+  <div id="controls" style="display:none;">
+    <button onclick="toggleAudio()">🎤 Mute/Unmute</button>
+    <button onclick="toggleVideo()">🎥 Video On/Off</button>
   </div>
-  <div>
-    <span id="status">Offline</span>
-  </div>
-</header>
 
-<div style="text-align: center; margin-top: 20px;">
-  <input type="text" id="roomCode" placeholder="Room Code">
-  <input type="password" id="roomPassword" placeholder="Room Password">
-  <button onclick="createRoom()">Create Room</button>
-  <button onclick="joinRoom()">Join Room</button>
-</div>
+  <div id="videos"></div>
 
-<div id="videos"></div>
+  <script>
+    const maxUsers = 6;
+    let peer = new Peer();
+    let connections = {};
+    let myStream = null;
+    let myId = null;
+    let roomId = '';
+    let videoContainer = document.getElementById("videos");
 
-<script>
-let localStream;
-let peerConnections = {};
-let roomCode = '';
-let username = '';
-let roomPassword = '';
-let online = false;
+    peer.on("open", id => {
+      myId = id;
+      document.getElementById("my-id").textContent = id;
+    });
 
-const servers = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-};
+    function joinRoom() {
+      roomId = document.getElementById("room-id").value.trim();
+      if (!roomId) return alert("Enter a room ID");
 
-function toggleDarkMode() {
-  document.body.classList.toggle('dark-mode');
-}
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+        myStream = stream;
+        document.getElementById("controls").style.display = "block";
+        addVideo(myId, stream, true);
 
-function logout() {
-  localStorage.clear();
-  location.reload();
-}
+        const conn = peer.connect(roomId);
+        conn.on("open", () => {
+          conn.send({ type: "join", id: myId });
+        });
 
-function updateStatus() {
-  document.getElementById("status").textContent = online ? "🟢 Online" : "🔴 Offline";
-}
-
-async function getMedia() {
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    const video = document.createElement('video');
-    video.srcObject = localStream;
-    video.autoplay = true;
-    video.muted = true;
-    document.getElementById('videos').appendChild(video);
-  } catch (e) {
-    alert('Permission denied or no camera/mic found.');
-  }
-}
-
-function createRoom() {
-  roomCode = document.getElementById("roomCode").value.trim();
-  roomPassword = document.getElementById("roomPassword").value.trim();
-  if (!roomCode || !roomPassword) return alert("Both room code and password required.");
-
-  localStorage.setItem("room", roomCode);
-  localStorage.setItem("password", roomPassword);
-
-  online = true;
-  updateStatus();
-  initSocket(true);
-}
-
-function joinRoom() {
-  roomCode = document.getElementById("roomCode").value.trim();
-  roomPassword = document.getElementById("roomPassword").value.trim();
-  if (!roomCode || !roomPassword) return alert("Both room code and password required.");
-
-  localStorage.setItem("room", roomCode);
-  localStorage.setItem("password", roomPassword);
-
-  online = true;
-  updateStatus();
-  initSocket(false);
-}
-
-function send(msg) {
-  ws.send(JSON.stringify({ ...msg, roomCode, roomPassword }));
-}
-
-let ws;
-
-function initSocket(isHost) {
-  getMedia().then(() => {
-    ws = new WebSocket("wss://your-signaling-server.glitch.me");
-
-    ws.onopen = () => {
-      send({ type: "join", isHost, name: username });
-    };
-
-    ws.onmessage = async (event) => {
-      const data = JSON.parse(event.data);
-
-      if (data.error) return alert(data.error);
-
-      switch (data.type) {
-        case "offer":
-          const pc = createPeerConnection(data.name);
-          await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          send({ type: "answer", answer, to: data.name });
-          break;
-
-        case "answer":
-          await peerConnections[data.name]?.setRemoteDescription(new RTCSessionDescription(data.answer));
-          break;
-
-        case "candidate":
-          await peerConnections[data.name]?.addIceCandidate(new RTCIceCandidate(data.candidate));
-          break;
-
-        case "users":
-          data.users.forEach(user => {
-            if (user !== username && Object.keys(peerConnections).length < 6) {
-              const pc = createPeerConnection(user);
-              localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-              pc.createOffer().then(offer => {
-                pc.setLocalDescription(offer);
-                send({ type: "offer", offer, to: user });
-              });
+        peer.on("connection", c => {
+          c.on("data", data => {
+            if (data.type === "join") {
+              if (Object.keys(connections).length >= maxUsers - 1) return;
+              if (!connections[data.id]) {
+                const call = peer.call(data.id, myStream);
+                setupCall(call);
+              }
             }
           });
-          break;
-      }
-    };
-  });
-}
+        });
 
-function createPeerConnection(name) {
-  const pc = new RTCPeerConnection(servers);
-  peerConnections[name] = pc;
-
-  pc.onicecandidate = e => {
-    if (e.candidate) {
-      send({ type: "candidate", candidate: e.candidate, to: name });
+        peer.on("call", call => {
+          if (Object.keys(connections).length >= maxUsers - 1 || connections[call.peer]) return;
+          call.answer(myStream);
+          setupCall(call);
+        });
+      });
     }
-  };
 
-  pc.ontrack = e => {
-    const video = document.createElement('video');
-    video.srcObject = e.streams[0];
-    video.autoplay = true;
-    document.getElementById('videos').appendChild(video);
-  };
+    function setupCall(call) {
+      call.on("stream", remoteStream => {
+        addVideo(call.peer, remoteStream, false);
+      });
+      call.on("close", () => {
+        removeVideo(call.peer);
+      });
+      connections[call.peer] = call;
+    }
 
-  return pc;
-}
+    function addVideo(id, stream, isMine) {
+      if (document.getElementById(id)) return;
+      if (videoContainer.children.length >= maxUsers) return;
 
-// Auto-login if credentials exist
-window.onload = () => {
-  username = prompt("Enter your name or nickname:") || "User" + Math.floor(Math.random() * 1000);
-  const storedRoom = localStorage.getItem("room");
-  const storedPass = localStorage.getItem("password");
-  if (storedRoom && storedPass) {
-    document.getElementById("roomCode").value = storedRoom;
-    document.getElementById("roomPassword").value = storedPass;
-    joinRoom();
-  }
-};
-</script>
+      const vid = document.createElement("video");
+      vid.id = id;
+      vid.srcObject = stream;
+      vid.autoplay = true;
+      vid.playsInline = true;
+      if (isMine) vid.muted = true;
+      videoContainer.appendChild(vid);
+    }
+
+    function removeVideo(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+      delete connections[id];
+    }
+
+    function toggleAudio() {
+      if (!myStream) return;
+      myStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+    }
+
+    function toggleVideo() {
+      if (!myStream) return;
+      myStream.getVideoTracks().forEach(track => track.enabled = !track.enabled);
+    }
+  </script>
 </body>
 </html>
