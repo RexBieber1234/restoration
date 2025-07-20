@@ -1,118 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>RCC call page</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RCC CALL PAGE</title>
   <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <style>
-    body { background: #121212; color: white; text-align: center; font-family: sans-serif; margin: 0; padding: 20px; }
-    #videos { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 20px; }
-    video { width: 100%; border-radius: 10px; border: 2px solid #333; background: black; }
-    #controls { margin-top: 15px; }
-    button, input { padding: 10px; font-size: 16px; margin: 5px; border: none; border-radius: 5px; }
-    button { background: #333; color: white; cursor: pointer; }
-    button:hover { background: #555; }
+    body {
+      background: #111;
+      color: #fff;
+      text-align: center;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    h2 {
+      margin: 20px 10px;
+    }
+    #my-id {
+      font-weight: bold;
+      color: #4caf50;
+    }
+    #peer-id-input, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #videos {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px;
+    }
+    video {
+      width: 100%;
+      max-width: 300px;
+      border-radius: 10px;
+      border: 2px solid #333;
+    }
+    .video-container {
+      position: relative;
+      width: 45%;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    .controls button {
+      background: #222;
+      color: white;
+      border: none;
+      margin: 5px;
+      padding: 10px;
+      font-size: 18px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background: #333;
+    }
+    @media (max-width: 768px) {
+      .video-container {
+        width: 90%;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>🎥 Call A friend by sharing the code(id) below</h1>
-  <p>Your ID: <span id="my-id">Loading...</span></p>
-  <input id="room-id" placeholder="Enter Room ID" />
-  <button onclick="joinRoom()">Join</button>
 
-  <div id="controls" style="display:none;">
-    <button onclick="toggleAudio()">🎤 Mute/Unmute</button>
-    <button onclick="toggleVideo()">🎥 Video On/Off</button>
-  </div>
+  <h2>Call a friend by sharing the code (ID) below</h2>
+  <p>Your ID: <span id="my-id">Loading...</span></p>
+  <input id="peer-id-input" placeholder="Enter Peer ID to call" />
+  <button id="call-btn">Call</button>
 
   <div id="videos"></div>
 
+  <div class="controls">
+    <button id="mute-btn"><i class="fas fa-microphone-slash"></i> Mute</button>
+    <button id="video-btn"><i class="fas fa-video-slash"></i> Camera Off</button>
+    <button id="leave-btn"><i class="fas fa-phone-slash"></i> Leave Call</button>
+  </div>
+
   <script>
-    const maxUsers = 6;
-    let peer = new Peer();
-    let connections = {};
-    let myStream = null;
-    let myId = null;
-    let roomId = '';
-    let videoContainer = document.getElementById("videos");
+    const myIdSpan = document.getElementById("my-id");
+    const peerIdInput = document.getElementById("peer-id-input");
+    const callBtn = document.getElementById("call-btn");
+    const videosDiv = document.getElementById("videos");
+    const muteBtn = document.getElementById("mute-btn");
+    const videoBtn = document.getElementById("video-btn");
+    const leaveBtn = document.getElementById("leave-btn");
+
+    const peer = new Peer(); // PeerJS cloud server
+    const connections = new Set();
+    const videoMap = new Map();
+    let localStream;
+    let muted = false;
+    let videoOn = true;
+    let peerId = null;
 
     peer.on("open", id => {
-      myId = id;
-      document.getElementById("my-id").textContent = id;
+      peerId = id;
+      myIdSpan.textContent = id;
     });
 
-    function joinRoom() {
-      roomId = document.getElementById("room-id").value.trim();
-      if (!roomId) return alert("Enter a room ID");
+    peer.on("call", call => {
+      if (connections.size >= 6 || connections.has(call.peer)) return;
 
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-        myStream = stream;
-        document.getElementById("controls").style.display = "block";
-        addVideo(myId, stream, true);
+        localStream = localStream || stream;
+        call.answer(stream);
+        addVideoStream(call.peer, stream, true);
 
-        const conn = peer.connect(roomId);
-        conn.on("open", () => {
-          conn.send({ type: "join", id: myId });
+        call.on("stream", remoteStream => {
+          addVideoStream(call.peer, remoteStream, false);
         });
 
-        peer.on("connection", c => {
-          c.on("data", data => {
-            if (data.type === "join") {
-              if (Object.keys(connections).length >= maxUsers - 1) return;
-              if (!connections[data.id]) {
-                const call = peer.call(data.id, myStream);
-                setupCall(call);
-              }
-            }
-          });
-        });
-
-        peer.on("call", call => {
-          if (Object.keys(connections).length >= maxUsers - 1 || connections[call.peer]) return;
-          call.answer(myStream);
-          setupCall(call);
-        });
+        call.on("close", () => removeVideoStream(call.peer));
+        connections.add(call.peer);
       });
-    }
+    });
 
-    function setupCall(call) {
+    callBtn.onclick = async () => {
+      const targetId = peerIdInput.value.trim();
+      if (!targetId || targetId === peerId || connections.has(targetId) || connections.size >= 6) return alert("Invalid or duplicate ID");
+
+      if (!localStream) {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        addVideoStream(peerId, localStream, true);
+      }
+
+      const call = peer.call(targetId, localStream);
       call.on("stream", remoteStream => {
-        addVideo(call.peer, remoteStream, false);
+        addVideoStream(targetId, remoteStream, false);
       });
-      call.on("close", () => {
-        removeVideo(call.peer);
-      });
-      connections[call.peer] = call;
+      call.on("close", () => removeVideoStream(targetId));
+      connections.add(targetId);
+    };
+
+    function addVideoStream(id, stream, isLocal) {
+      if (videoMap.has(id)) return;
+
+      const container = document.createElement("div");
+      container.className = "video-container";
+      container.id = "vid-" + id;
+
+      const video = document.createElement("video");
+      video.autoplay = true;
+      video.playsInline = true;
+      if (isLocal) video.muted = true;
+      video.srcObject = stream;
+
+      container.appendChild(video);
+      videosDiv.appendChild(container);
+      videoMap.set(id, container);
     }
 
-    function addVideo(id, stream, isMine) {
-      if (document.getElementById(id)) return;
-      if (videoContainer.children.length >= maxUsers) return;
-
-      const vid = document.createElement("video");
-      vid.id = id;
-      vid.srcObject = stream;
-      vid.autoplay = true;
-      vid.playsInline = true;
-      if (isMine) vid.muted = true;
-      videoContainer.appendChild(vid);
+    function removeVideoStream(id) {
+      const container = videoMap.get(id);
+      if (container) {
+        container.remove();
+        videoMap.delete(id);
+        connections.delete(id);
+      }
     }
 
-    function removeVideo(id) {
-      const el = document.getElementById(id);
-      if (el) el.remove();
-      delete connections[id];
-    }
+    muteBtn.onclick = () => {
+      muted = !muted;
+      localStream.getAudioTracks().forEach(track => track.enabled = !muted);
+      muteBtn.innerHTML = muted ? '<i class="fas fa-microphone"></i> Unmute' : '<i class="fas fa-microphone-slash"></i> Mute';
+    };
 
-    function toggleAudio() {
-      if (!myStream) return;
-      myStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
-    }
+    videoBtn.onclick = () => {
+      videoOn = !videoOn;
+      localStream.getVideoTracks().forEach(track => track.enabled = videoOn);
+      videoBtn.innerHTML = videoOn ? '<i class="fas fa-video-slash"></i> Camera Off' : '<i class="fas fa-video"></i> Camera On';
+    };
 
-    function toggleVideo() {
-      if (!myStream) return;
-      myStream.getVideoTracks().forEach(track => track.enabled = !track.enabled);
-    }
+    leaveBtn.onclick = () => {
+      peer.disconnect();
+      peer.destroy();
+      alert("You left the call.");
+      window.location.reload();
+    };
   </script>
 </body>
 </html>
