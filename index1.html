@@ -148,7 +148,16 @@
       font-size: 1rem;
       line-height: 1.6;
     }
-  </style>
+  
+  button {
+    padding: 6px 12px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+</style>
+
 </head>
 
 <body>
@@ -319,5 +328,40 @@
 
     loadAllLeaders();
   </script>
+<script>
+  // Auto-login system
+  window.addEventListener("DOMContentLoaded", () => {
+    const username = localStorage.getItem("username");
+
+    if (username) {
+      showUserUI(username); // if already logged in
+    } else {
+      const name = prompt("Enter your name to join:");
+      if (name && name.trim() !== "") {
+        localStorage.setItem("username", name.trim());
+        showUserUI(name.trim());
+      } else {
+        alert("You must enter a name to proceed.");
+        location.reload();
+      }
+    }
+  });
+
+  function showUserUI(name) {
+    // You can show a welcome message or unlock content here
+    console.log("User logged in:", name);
+    document.body.insertAdjacentHTML("afterbegin",
+      `<div style="background:#0c0;color:white;padding:10px;text-align:center;">
+        Welcome, <strong>${name}</strong>!
+        <button onclick="logoutUser()" style="float:right;">Logout</button>
+      </div>`);
+  }
+
+  function logoutUser() {
+    localStorage.removeItem("username");
+    location.reload();
+  }
+</script>
+
 </body>
 </html>
