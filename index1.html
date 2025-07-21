@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Church Fellowships</title>
+  <title>Fellowships | Restoration Christian Church</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="icon" href="pic.JPG" type="image/jpg">
 
   <style>
     body {
@@ -62,14 +63,14 @@
       top: auto;
       left: 0;
       right: auto;
-      bottom: auto;
+      z-index: 10;
     }
 
     .Church-cartegories {
       background-color: white;
       color: black;
       padding: 40px;
-      margin: 50px auto;
+      margin: 80px auto 50px;
       width: 80%;
       max-width: 400px;
       border-radius: 20px;
@@ -90,10 +91,12 @@
       font-size: 1rem;
       cursor: pointer;
       transition: all 0.3s ease;
+      word-wrap: break-word;
+      white-space: normal;
     }
 
-    .btn1 { background-color: yellow; color: white; }
-    .btn1:hover { background-color: white; color: yellow; }
+    .btn1 { background-color: yellow; color: black; }
+    .btn1:hover { background-color: white; color: orange; }
 
     .btn2 { background-color: blue; color: white; }
     .btn2:hover { background-color: white; color: blue; }
@@ -153,16 +156,15 @@
       font-size: 1rem;
       line-height: 1.6;
     }
-  
-  button {
-    padding: 6px 12px;
-    margin-left: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-</style>
 
+    button {
+      padding: 6px 12px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
@@ -175,23 +177,25 @@
     <a class="nav-links" href="join.html"><i class="fa-solid fa-user-plus"></i> Join</a>
     <a class="nav-links" href="quiz.html"><i class="fa-solid fa-puzzle-piece"></i> Bible Quiz</a>
     <a class="nav-links" href="trivia.html"><i class="fa-solid fa-brain"></i> Trivia</a>
-    <a class="nav-links" href="video-call.html"><i class="fa-solid fa-video"></i> Video Call</a>
+    <a class="nav-links" href="video-call.html" target="_blank"><i class="fa-solid fa-video"></i> Video Call</a>
     <a class="nav-links" href="admin.html"><i class="fa-regular fa-user-circle"></i> Admin</a>
   </div>
 
   <div id="UserDetails"></div>
   <div id="adminPostedContent"></div>
 
-  <div class="Church-cartegories">
-    <h1><i class="fa-solid fa-hands-praying"></i> Fellowships</h1>
-    <a href="mens.html"><button class="btn1"><i class="fa-solid fa-person"></i> Mens' Fellowship</button></a>
-    <a href="womens.html"><button class="btn2"><i class="fa-solid fa-person-dress"></i> Womens' Fellowship</button></a>
-    <a href="youth.html"><button class="btn3"><i class="fa-solid fa-users"></i> Youths' Fellowship</button></a>
-    <a href="junior.html"><button class="btn4"><i class="fa-solid fa-child"></i> Junior Youth</button></a>
-    <a href="sunday.html"><button class="btn5"><i class="fa-solid fa-face-smile"></i> Sunday School</button></a>
-  </div>
+  <main>
+    <section class="Church-cartegories">
+      <h1><i class="fa-solid fa-hands-praying"></i> Fellowships</h1>
+      <a href="mens.html"><button class="btn1"><i class="fa-solid fa-person"></i> Mens' Fellowship</button></a>
+      <a href="womens.html"><button class="btn2"><i class="fa-solid fa-person-dress"></i> Womens' Fellowship</button></a>
+      <a href="youth.html"><button class="btn3"><i class="fa-solid fa-users"></i> Youths' Fellowship</button></a>
+      <a href="junior.html"><button class="btn4"><i class="fa-solid fa-child"></i> Junior Youth</button></a>
+      <a href="sunday.html"><button class="btn5"><i class="fa-solid fa-face-smile"></i> Sunday School</button></a>
+    </section>
 
-  <div class="about" id="about"></div>
+    <section class="about" id="about"></section>
+  </main>
 
   <script>
     const userDetails = document.getElementById("UserDetails");
@@ -237,7 +241,6 @@
         </div>`;
     }
 
-    // Leadership Section Logic
     const aboutSection = document.querySelector(".about");
 
     function createLeaderEntry(id, imgData = "pic.JPG", text = "Leader description...") {
@@ -255,7 +258,6 @@
       entryDiv.appendChild(img);
       entryDiv.appendChild(textSpan);
 
-      // Admin controls
       if (role === "admin") {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -333,40 +335,38 @@
 
     loadAllLeaders();
   </script>
-<script>
 
-  window.addEventListener("DOMContentLoaded", () => {
-    const username = localStorage.getItem("username");
-
-    if (username) {
-      showUserUI(username); 
-    } else {
-      const name = prompt("Enter your name to join:");
-      if (name && name.trim() !== "") {
-        localStorage.setItem("username", name.trim());
-        showUserUI(name.trim());
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const username = localStorage.getItem("username");
+      if (username) {
+        showUserUI(username);
       } else {
-        alert("You must enter a name to proceed.");
-        location.reload();
+        const name = prompt("Enter your name to join:");
+        if (name && name.trim() !== "") {
+          localStorage.setItem("username", name.trim());
+          showUserUI(name.trim());
+        } else {
+          alert("You must enter a name to proceed.");
+          location.reload();
+        }
       }
+    });
+
+    function showUserUI(name) {
+      document.body.insertAdjacentHTML("afterbegin",
+        `<div style="background: linear-gradient(rgb(7, 207, 7));color:white;padding:10px;text-align:center;">
+          Welcome, <strong>${name}</strong>!
+          <button onclick="logoutUser()" style="float:right;">Logout</button>
+        </div>`);
     }
-  });
 
-  function showUserUI(name) {
-    // You can show a welcome message or unlock content here
-    console.log("User logged in:", name);
-    document.body.insertAdjacentHTML("afterbegin",
-      `<div style="background: linear-gradient(rgb(7, 207, 7));color:white;padding:10px;text-align:center;">
-        Welcome, <strong>${name}</strong>!
-        <button onclick="logoutUser()" style="float:right;">Logout</button>
-      </div>`);
-  }
-
-  function logoutUser() {
-    localStorage.removeItem("username");
-    location.reload();
-  }
-</script>
-
+    function logoutUser() {
+      localStorage.removeItem("username");
+      localStorage.removeItem("loginType");
+      localStorage.removeItem("fellowshipID");
+      location.reload();
+    }
+  </script>
 </body>
 </html>
