@@ -58,6 +58,11 @@
       padding: 15px;
       font-size: 1rem;
       text-align: center;
+      position: fixed;
+      top: auto;
+      left: 0;
+      right: auto;
+      bottom: auto;
     }
 
     .Church-cartegories {
@@ -167,7 +172,7 @@
     <a class="nav-links" href="#home"><i class="fa-solid fa-house"></i> Home</a>
     <a class="nav-links" href="#about"><i class="fa-solid fa-book"></i> About</a>
     <a class="nav-links" href="#events"><i class="fa-solid fa-calendar-days"></i> Events</a>
-    <a class="nav-links" href="#"><i class="fa-solid fa-user-plus"></i> Join</a>
+    <a class="nav-links" href="join.html"><i class="fa-solid fa-user-plus"></i> Join</a>
     <a class="nav-links" href="quiz.html"><i class="fa-solid fa-puzzle-piece"></i> Bible Quiz</a>
     <a class="nav-links" href="trivia.html"><i class="fa-solid fa-brain"></i> Trivia</a>
     <a class="nav-links" href="video-call.html"><i class="fa-solid fa-video"></i> Video Call</a>
@@ -329,12 +334,12 @@
     loadAllLeaders();
   </script>
 <script>
-  // Auto-login system
+
   window.addEventListener("DOMContentLoaded", () => {
     const username = localStorage.getItem("username");
 
     if (username) {
-      showUserUI(username); // if already logged in
+      showUserUI(username); 
     } else {
       const name = prompt("Enter your name to join:");
       if (name && name.trim() !== "") {
@@ -351,7 +356,7 @@
     // You can show a welcome message or unlock content here
     console.log("User logged in:", name);
     document.body.insertAdjacentHTML("afterbegin",
-      `<div style="background:#0c0;color:white;padding:10px;text-align:center;">
+      `<div style="background: linear-gradient(rgb(7, 207, 7));color:white;padding:10px;text-align:center;">
         Welcome, <strong>${name}</strong>!
         <button onclick="logoutUser()" style="float:right;">Logout</button>
       </div>`);
