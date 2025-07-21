@@ -6,7 +6,6 @@
   <title>Fellowships | Restoration Christian Church</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link rel="icon" href="pic.JPG" type="image/jpg">
-
   <style>
     body {
       color: white;
@@ -168,6 +167,8 @@
 </head>
 
 <body>
+  <div id="UserDetails"></div>
+
   <div class="nav" id="home">
     <img class="nav-img" src="pic.JPG" alt="Church Logo" />
     <span class="nav-brand"><i>Restoration Christian Church</i></span>
@@ -181,7 +182,6 @@
     <a class="nav-links" href="admin.html"><i class="fa-regular fa-user-circle"></i> Admin</a>
   </div>
 
-  <div id="UserDetails"></div>
   <div id="adminPostedContent"></div>
 
   <main>
@@ -198,52 +198,85 @@
   </main>
 
   <script>
-    const userDetails = document.getElementById("UserDetails");
-    const username = localStorage.getItem("username");
-    const role = localStorage.getItem("loginType");
-    let userID = localStorage.getItem("fellowshipID");
-
-    if (!username || role !== "user") {
-      alert("⚠️ Only logged-in users can access this page.");
-      window.location.href = "index.html";
-    } else {
-      if (!userID) {
-        const initials = username.split(" ").map(n => n[0].toUpperCase()).join("");
-        const randomNum = Math.floor(100 + Math.random() * 900);
-        userID = `${initials}-${randomNum}`;
-        localStorage.setItem("fellowshipID", userID);
+    window.addEventListener("DOMContentLoaded", () => {
+      const username = localStorage.getItem("username");
+      if (username) {
+        document.body.insertAdjacentHTML("afterbegin",
+          `<div style="background: linear-gradient(rgb(7, 207, 7));color:white;padding:10px;text-align:center;">
+            Welcome, <strong>${username}</strong>!
+            <button onclick="logoutUser()" style="float:right;">Logout</button>
+          </div>`);
+        initUser();
+      } else {
+        const name = prompt("Enter your name to join:");
+        if (name && name.trim() !== "") {
+          localStorage.setItem("username", name.trim());
+          showUserUI(name.trim());
+          initUser();
+        } else {
+          alert("You must enter a name to proceed.");
+          location.reload();
+        }
       }
+    });
 
-      userDetails.innerHTML = `
-        <i class="fa-solid fa-user"></i> <b>Name:</b> ${username}<br>
-        <i class="fa-solid fa-lock"></i> <b>Role:</b> ${role}<br>
-        <i class="fa-solid fa-id-badge"></i> <b>Fellowship ID:</b> ${userID}
-      `;
-
-      const speak = new SpeechSynthesisUtterance(`Welcome ${username}. Your Fellowship ID is ${userID}`);
-      speak.lang = "en-US";
-      window.speechSynthesis.speak(speak);
-
-      const tracked = JSON.parse(localStorage.getItem("joinedUsers")) || [];
-      const exists = tracked.find(u => u.id === userID);
-      if (!exists) {
-        tracked.push({ name: username, id: userID, page: "fellowships" });
-        localStorage.setItem("joinedUsers", JSON.stringify(tracked));
-      }
+    function logoutUser() {
+      localStorage.removeItem("username");
+      localStorage.removeItem("loginType");
+      localStorage.removeItem("fellowshipID");
+      location.reload();
     }
 
-    const adminContent = localStorage.getItem("admin_post_fellowships");
-    if (adminContent) {
-      document.getElementById("adminPostedContent").innerHTML = `
-        <h3 style="text-align:center; color:white;"><i class="fa-solid fa-bullhorn"></i> Admin Message</h3>
-        <div style="background:white; color:black; padding:15px; margin:20px; border-radius:8px;">
-          ${adminContent}
-        </div>`;
+    function initUser() {
+      const username = localStorage.getItem("username");
+      const role = localStorage.getItem("loginType");
+      const userDetails = document.getElementById("UserDetails");
+      let userID = localStorage.getItem("fellowshipID");
+
+      if (!username || role !== "user") {
+        alert("⚠️ Only logged-in users can access this page.");
+        window.location.href = "index.html";
+      } else {
+        if (!userID) {
+          const initials = username.split(" ").map(n => n[0].toUpperCase()).join("");
+          const randomNum = Math.floor(100 + Math.random() * 900);
+          userID = `${initials}-${randomNum}`;
+          localStorage.setItem("fellowshipID", userID);
+        }
+
+        userDetails.innerHTML = `
+          <i class="fa-solid fa-user"></i> <b>Name:</b> ${username}<br>
+          <i class="fa-solid fa-lock"></i> <b>Role:</b> ${role}<br>
+          <i class="fa-solid fa-id-badge"></i> <b>Fellowship ID:</b> ${userID}
+        `;
+
+        const speak = new SpeechSynthesisUtterance(`Welcome ${username}. Your Fellowship ID is ${userID}`);
+        speak.lang = "en-US";
+        window.speechSynthesis.speak(speak);
+
+        const tracked = JSON.parse(localStorage.getItem("joinedUsers")) || [];
+        const exists = tracked.find(u => u.id === userID);
+        if (!exists) {
+          tracked.push({ name: username, id: userID, page: "fellowships" });
+          localStorage.setItem("joinedUsers", JSON.stringify(tracked));
+        }
+      }
+
+      const adminContent = localStorage.getItem("admin_post_fellowships");
+      if (adminContent) {
+        document.getElementById("adminPostedContent").innerHTML = `
+          <h3 style="text-align:center; color:white;"><i class="fa-solid fa-bullhorn"></i> Admin Message</h3>
+          <div style="background:white; color:black; padding:15px; margin:20px; border-radius:8px;">
+            ${adminContent}
+          </div>`;
+      }
+
+      loadAllLeaders(role);
     }
 
     const aboutSection = document.querySelector(".about");
 
-    function createLeaderEntry(id, imgData = "pic.JPG", text = "Leader description...") {
+    function createLeaderEntry(id, imgData = "pic.JPG", text = "Leader description...", role = "user") {
       const entryDiv = document.createElement("div");
       entryDiv.className = "about-entry";
       entryDiv.id = id;
@@ -305,67 +338,32 @@
       localStorage.setItem("leaders", JSON.stringify(saved));
     }
 
-    function loadAllLeaders() {
+    function loadAllLeaders(role = "user") {
       const saved = JSON.parse(localStorage.getItem("leaders") || "[]");
       saved.forEach(entry => {
-        createLeaderEntry(entry.id, entry.img, entry.text);
+        createLeaderEntry(entry.id, entry.img, entry.text, role);
       });
-    }
 
-    if (role === "admin") {
-      const addBtn = document.createElement("button");
-      addBtn.textContent = "➕ Add Leader";
-      addBtn.style.margin = "30px auto";
-      addBtn.style.padding = "10px 20px";
-      addBtn.style.display = "block";
-      addBtn.style.fontSize = "1rem";
-      addBtn.style.border = "none";
-      addBtn.style.borderRadius = "8px";
-      addBtn.style.cursor = "pointer";
-      addBtn.style.backgroundColor = "#003366";
-      addBtn.style.color = "white";
+      if (role === "admin") {
+        const addBtn = document.createElement("button");
+        addBtn.textContent = "➕ Add Leader";
+        addBtn.style.margin = "30px auto";
+        addBtn.style.padding = "10px 20px";
+        addBtn.style.display = "block";
+        addBtn.style.fontSize = "1rem";
+        addBtn.style.border = "none";
+        addBtn.style.borderRadius = "8px";
+        addBtn.style.cursor = "pointer";
+        addBtn.style.backgroundColor = "#003366";
+        addBtn.style.color = "white";
 
-      addBtn.onclick = () => {
-        const newId = "entry-" + Date.now();
-        createLeaderEntry(newId);
-      };
+        addBtn.onclick = () => {
+          const newId = "entry-" + Date.now();
+          createLeaderEntry(newId, "pic.JPG", "Leader description...", role);
+        };
 
-      document.body.insertBefore(addBtn, aboutSection);
-    }
-
-    loadAllLeaders();
-  </script>
-
-  <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      const username = localStorage.getItem("username");
-      if (username) {
-        showUserUI(username);
-      } else {
-        const name = prompt("Enter your name to join:");
-        if (name && name.trim() !== "") {
-          localStorage.setItem("username", name.trim());
-          showUserUI(name.trim());
-        } else {
-          alert("You must enter a name to proceed.");
-          location.reload();
-        }
+        document.body.insertBefore(addBtn, aboutSection);
       }
-    });
-
-    function showUserUI(name) {
-      document.body.insertAdjacentHTML("afterbegin",
-        `<div style="background: linear-gradient(rgb(7, 207, 7));color:white;padding:10px;text-align:center;">
-          Welcome, <strong>${name}</strong>!
-          <button onclick="logoutUser()" style="float:right;">Logout</button>
-        </div>`);
-    }
-
-    function logoutUser() {
-      localStorage.removeItem("username");
-      localStorage.removeItem("loginType");
-      localStorage.removeItem("fellowshipID");
-      location.reload();
     }
   </script>
 </body>
