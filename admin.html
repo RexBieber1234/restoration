@@ -1,166 +1,186 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Admin Dashboard</title>
+  <link rel="icon" href="pic.JPG" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: Arial, sans-serif;
-      background: #f2f2f2;
+      background: #f0f2f5;
+      color: #333;
+      margin: 0;
       padding: 20px;
     }
     h1, h2 {
       text-align: center;
-    }
-    table {
-      width: 100%;
-      background: white;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-      text-align: center;
+      color: #003366;
     }
     form {
       background: white;
       padding: 20px;
+      margin: 20px auto;
       border-radius: 10px;
+      max-width: 600px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    input, textarea, button {
-      display: block;
+    input[type="text"],
+    input[type="file"],
+    textarea {
       width: 100%;
-      margin: 10px 0;
-      padding: 8px;
-      font-size: 16px;
+      padding: 10px;
+      margin: 10px 0 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
     }
-    .note {
-      font-size: 0.9rem;
-      color: gray;
+    textarea {
+      resize: vertical;
+      min-height: 80px;
     }
-    .highlight {
-      background-color: #e8f9ff;
+    button {
+      background-color: #003366;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #00509e;
+    }
+    button:active {
+      background-color: #001f4d;
+    }
+    .danger {
+      background-color: red !important;
+    }
+    @media (max-width: 640px) {
+      form {
+        padding: 15px;
+        margin: 15px;
+      }
     }
   </style>
 </head>
 <body>
-  <script>
-    const username = localStorage.getItem("username");
-    const role = localStorage.getItem("loginType");
-    if (!username || !role || role !== "admin") {
-      alert("⛔ Only admins can access this page.");
-      window.location.href = "index.html";
-    }
-  </script>
+  <h1>🛠 Admin Dashboard</h1>
 
-  <h1>📊 Admin Dashboard</h1>
-
-  <!-- Joined Users Table -->
-  <h2>📋 Users Who Joined Fellowships</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>👤 Name</th>
-        <th>🆔 Fellowship ID</th>
-        <th>📄 Page</th>
-        <th>🗑 Action</th>
-      </tr>
-    </thead>
-    <tbody id="userTableBody"></tbody>
-  </table>
-
-  <!-- Admin Post Form -->
-  <h2>✍️ Post Content to Pages</h2>
-  <form id="postForm">
-    <label>📄 Page name (e.g. mens, womens)</label>
-    <input type="text" id="targetPage" required />
-
-    <label>📝 Message or Content</label>
-    <textarea id="adminContent" rows="5" required></textarea>
-
-    <button type="submit">✅ Post to Page</button>
-    <div class="note">This will appear inside the page if it supports admin content.</div>
+  <!-- Post text content -->
+  <h2>📝 Post Text to Page</h2>
+  <form id="textPostForm">
+    <input type="text" id="textTargetPage" placeholder="Page name (e.g. mens)" required />
+    <textarea id="textContent" placeholder="Your message" required></textarea>
+    <button type="submit">✅ Post Text</button>
   </form>
 
-  <!-- Chat/Call Activity Monitor -->
-  <h2>📶 Live Chat / Call Activity</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>👤 User Code</th>
-        <th>💬 Status</th>
-      </tr>
-    </thead>
-    <tbody id="activityTableBody">
-      <tr><td colspan="2">⏳ Loading chat/call activity...</td></tr>
-    </tbody>
-  </table>
+  <!-- Post multiple images -->
+  <h2>🖼 Upload Multiple Images</h2>
+  <form id="multiImageForm">
+    <input type="text" id="imageTargetPage" placeholder="Page name (e.g. fellowships)" required />
+    <input type="file" id="multiImages" accept="image/*" multiple required />
+    <input type="text" id="imageCaption" placeholder="Caption (optional)" />
+    <button type="submit">✅ Upload Images</button>
+  </form>
+
+  <!-- Post audio or video -->
+  <h2>🎵📹 Post Audio or Video</h2>
+  <form id="mediaForm">
+    <input type="text" id="mediaTargetPage" placeholder="Page name (e.g. events)" required />
+    <input type="file" id="mediaFile" accept="audio/*,video/*" required />
+    <input type="text" id="mediaCaption" placeholder="Caption (optional)" />
+    <button type="submit">✅ Upload Media</button>
+  </form>
+
+  <!-- Delete posted content -->
+  <h2>🧹 Delete Posted Content</h2>
+  <form id="deleteForm">
+    <input type="text" id="deleteTargetPage" placeholder="Page name to clear" required />
+    <button type="submit" class="danger">❌ Clear Content</button>
+  </form>
 
   <script>
-    const users = JSON.parse(localStorage.getItem("joinedUsers")) || [];
-    const tbody = document.getElementById("userTableBody");
-
-    function renderUserTable() {
-      tbody.innerHTML = "";
-      if (users.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='4'>No users yet</td></tr>";
-      } else {
-        users.forEach((u, index) => {
-          tbody.innerHTML += `
-            <tr>
-              <td>${u.name}</td>
-              <td>${u.id}</td>
-              <td>${u.page}</td>
-              <td><button onclick="deleteUser(${index})" style="color:red;">🗑 Delete</button></td>
-            </tr>
-          `;
-        });
-      }
-    }
-
-    function deleteUser(index) {
-      const deleted = users.splice(index, 1)[0];
-      localStorage.setItem("joinedUsers", JSON.stringify(users));
-      const deletedList = JSON.parse(localStorage.getItem("deletedUsers") || "[]");
-      deletedList.push(deleted.id);
-      localStorage.setItem("deletedUsers", JSON.stringify(deletedList));
-      alert(`✅ User "${deleted.name}" deleted.`);
-      renderUserTable();
-    }
-
-    renderUserTable();
-
-    document.getElementById("postForm").addEventListener("submit", function(e) {
+    // Post text
+    document.getElementById("textPostForm").addEventListener("submit", function (e) {
       e.preventDefault();
-      const page = document.getElementById("targetPage").value.trim();
-      const content = document.getElementById("adminContent").value.trim();
-      if (!page || !content) return alert("Fill all fields");
-      localStorage.setItem("admin_post_" + page, content);
-      alert("✅ Content posted to " + page + ".html");
+      const page = textTargetPage.value.trim();
+      const msg = textContent.value.trim();
+      if (!page || !msg) return alert("Fill all fields.");
+      localStorage.setItem("admin_post_" + page, `<p>${msg}</p>`);
+      alert("✅ Text posted!");
+      this.reset();
     });
 
-    // ✅ Realtime Chat/Call Monitor
-    function renderChatCallActivity() {
-      const activityBody = document.getElementById("activityTableBody");
-      const chatCallUsers = JSON.parse(localStorage.getItem("activeChatCallUsers") || "[]");
-      if (chatCallUsers.length === 0) {
-        activityBody.innerHTML = "<tr><td colspan='2'>No active users</td></tr>";
-      } else {
-        activityBody.innerHTML = "";
-        chatCallUsers.forEach(user => {
-          activityBody.innerHTML += `
-            <tr class="highlight">
-              <td>${user.code}</td>
-              <td>${user.status}</td>
-            </tr>
-          `;
-        });
+    // Post multiple images
+    document.getElementById("multiImageForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const page = imageTargetPage.value.trim();
+      const files = multiImages.files;
+      const caption = imageCaption.value.trim();
+      if (!page || !files.length) return alert("Select page and at least one image.");
+      for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          let existing = localStorage.getItem("admin_post_" + page) || "";
+          let html = `<div style="text-align:center;margin:10px 0">
+            <img src="${e.target.result}" style="max-width:95%;border-radius:10px" />
+            ${caption ? `<p>${caption}</p>` : ""}
+          </div>`;
+          localStorage.setItem("admin_post_" + page, existing + html);
+        };
+        reader.readAsDataURL(file);
       }
-    }
+      alert("✅ Images posted!");
+      this.reset();
+    });
 
-    // Refresh activity every 5 seconds
-    setInterval(renderChatCallActivity, 5000);
-    renderChatCallActivity();
+    // Post audio/video
+    document.getElementById("mediaForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const page = mediaTargetPage.value.trim();
+      const file = mediaFile.files[0];
+      const caption = mediaCaption.value.trim();
+      if (!page || !file) return alert("Select page and file.");
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        let html = "";
+        if (file.type.startsWith("audio/")) {
+          html = `<div style="text-align:center;margin:10px 0">
+            <audio controls src="${e.target.result}" style="width:90%"></audio>
+            ${caption ? `<p>${caption}</p>` : ""}
+          </div>`;
+        } else if (file.type.startsWith("video/")) {
+          html = `<div style="text-align:center;margin:10px 0">
+            <video controls src="${e.target.result}" style="max-width:95%;border-radius:10px"></video>
+            ${caption ? `<p>${caption}</p>` : ""}
+          </div>`;
+        }
+        let existing = localStorage.getItem("admin_post_" + page) || "";
+        localStorage.setItem("admin_post_" + page, existing + html);
+        alert("✅ Media posted!");
+        mediaForm.reset();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Delete posted content
+    document.getElementById("deleteForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const page = deleteTargetPage.value.trim();
+      if (!page) return alert("Enter a page name.");
+      if (confirm("❗ Are you sure you want to delete all content for " + page + "?")) {
+        localStorage.removeItem("admin_post_" + page);
+        alert("🧹 Content cleared for: " + page);
+        deleteForm.reset();
+      }
+    });
   </script>
 </body>
 </html>
