@@ -12,14 +12,42 @@
     .nav a:hover { color: yellow; }
     #UserDetails { background: #333; color: white; text-align: center; padding: 15px; }
     .fellowship-content { background: white; margin: 30px auto; padding: 25px; max-width: 600px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.2); }
-    .admin-message { background: #f8f8f8; padding: 15px; margin-top: 20px; border-left: 6px solid orange; border-radius: 5px; }
+    .admin-message {
+      background: #f8f8f8;
+      padding: 15px;
+      margin-top: 20px;
+      border-left: 6px solid orange;
+      border-radius: 5px;
+      position: relative;
+    }
+    .admin-message img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    .controls button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      margin-left: 5px;
+    }
   </style>
 </head>
 <body>
+<a href="javascript:history.back()" style="text-decoration:none; color: purple; font-size: 18px;">
+  <i class="fa fa-arrow-left"></i> Back
+</a>
+
 
 <div class="nav">
   <span><i class="fa-solid fa-church"></i> Sunday School</span>
-    <a href="index1.html" class="nav-links"><i class="fa-solid fa-house"></i> Home</a>
+  <a href="index1.html"><i class="fa-solid fa-house"></i> Home</a>
   <a href="admin.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
 </div>
 
@@ -31,27 +59,26 @@
 </div>
 
 <script>
+  // User details
   const username = localStorage.getItem("username");
   const role = localStorage.getItem("loginType");
   let userID = localStorage.getItem("sundayFellowshipID");
 
-  if (!username || role !== "user") {
-    alert("⚠️ Only logged-in users can access this page.");
-    window.location.href = "index.html";
-  } else {
-    if (!userID) {
-      const initials = username.split(" ").map(n => n[0].toUpperCase()).join("");
-      userID = `${initials}-${Math.floor(100 + Math.random() * 900)}`;
-      localStorage.setItem("sundayFellowshipID", userID);
-    }
+  if (!userID && username) {
+    const initials = username.split(" ").map(n => n[0].toUpperCase()).join("");
+    userID = `${initials}-${Math.floor(100 + Math.random() * 900)}`;
+    localStorage.setItem("sundayFellowshipID", userID);
+  }
 
+  if (username && role && userID) {
     document.getElementById("UserDetails").innerHTML = `
       <i class="fa-solid fa-user"></i> <b>Name:</b> ${username} &nbsp;
       <i class="fa-solid fa-lock"></i> <b>Role:</b> ${role} &nbsp;
       <i class="fa-solid fa-id-badge"></i> <b>Fellowship ID:</b> ${userID}
     `;
 
-    speechSynthesis.speak(new SpeechSynthesisUtterance(`Welcome ${username}. Your Fellowship ID is ${userID}`));
+    const welcomeMessage = `Welcome ${username}. Your Fellowship ID is ${userID}`;
+    speechSynthesis.speak(new SpeechSynthesisUtterance(welcomeMessage));
 
     const tracked = JSON.parse(localStorage.getItem("joinedUsers")) || [];
     if (!tracked.find(u => u.id === userID)) {
@@ -60,14 +87,50 @@
     }
   }
 
-  const msg = localStorage.getItem("admin_post_sunday");
-  if (msg) {
-    document.getElementById("adminPostedContent").innerHTML = `
-      <div class="admin-message">
-        <h3><i class="fa-solid fa-bullhorn"></i> Admin Message</h3>
-        <p>${msg}</p>
-      </div>`;
+  // Display admin messages
+  const page = "sunday";
+  const key = `admin_post_${page}_multi`;
+  let messages = JSON.parse(localStorage.getItem(key)) || [];
+
+  function renderMessages() {
+    const container = document.getElementById("adminPostedContent");
+    container.innerHTML = "";
+
+    messages.forEach((msg, i) => {
+      const div = document.createElement("div");
+      div.className = "admin-message";
+      div.innerHTML = `
+        <div class="controls">
+          <button onclick="editMessage(${i})">✏️</button>
+          <button onclick="deleteMessage(${i})">🗑️</button>
+        </div>
+        <h3><i class="fa-solid fa-bullhorn"></i> Admin Message ${i + 1}</h3>
+        <p>${msg.text}</p>
+        ${msg.image ? `<img src="${msg.image}" alt="Attached Image">` : ""}
+      `;
+      container.appendChild(div);
+    });
   }
+
+  function deleteMessage(index) {
+    if (confirm("Delete this message?")) {
+      messages.splice(index, 1);
+      localStorage.setItem(key, JSON.stringify(messages));
+      renderMessages();
+    }
+  }
+
+  function editMessage(index) {
+    const newText = prompt("Edit message:", messages[index].text);
+    if (newText !== null) {
+      messages[index].text = newText.trim();
+      localStorage.setItem(key, JSON.stringify(messages));
+      renderMessages();
+    }
+  }
+
+  renderMessages();
 </script>
+
 </body>
 </html>
