@@ -67,15 +67,22 @@
 <body>
   <h1>🛠 Admin Dashboard</h1>
 
-  <!-- Post text content -->
-  <h2>📝 Post Text to Page</h2>
-  <form id="textPostForm">
-    <input type="text" id="textTargetPage" placeholder="Page name (e.g. mens)" required />
-    <textarea id="textContent" placeholder="Your message" required></textarea>
-    <button type="submit">✅ Post Text</button>
-  </form>
+  <div style="text-align:center; margin-bottom:20px;">
+  <span id="adminStatus" style="color:#003366; font-weight:bold;"></span>
+  <button onclick="logout()" style="background:red; color:white; padding:10px 20px; border:none; border-radius:8px; margin-left:10px;">🚪 Logout</button>
+</div>
 
-  <!-- Post multiple images -->
+  <h2>📝 Post Text to Page</h2>
+<form>
+  <input type="text" id="pageName" placeholder="Enter page name (e.g. sunday)">
+<input type="text" id="adminInput" placeholder="Enter message">
+<button onclick="postToTypedPage()">Post Message</button>
+
+<div id="allMessages"></div>
+
+</form>
+  
+<!-- Post multiple images -->
   <h2>🖼 Upload Multiple Images</h2>
   <form id="multiImageForm">
     <input type="text" id="imageTargetPage" placeholder="Page name (e.g. fellowships)" required />
@@ -117,14 +124,38 @@
   <div id="adminChroniclesList" style="max-width: 800px; margin:auto;"></div>
 
 <script>
-  const chronicleForm = document.getElementById('chronicleForm');
-  const chronicleTitle = document.getElementById('chronicleTitle');
-  const chronicleDesc = document.getElementById('chronicleDesc');
-  const chronicleDate = document.getElementById('chronicleDate');
-  const chronicleMedia = document.getElementById('chronicleMedia');
-  const chronicleIndex = document.getElementById('chronicleIndex');
-  const adminChroniclesList = document.getElementById('adminChroniclesList');
+  const adminName = localStorage.getItem("adminName");
+  const adminPassword = localStorage.getItem("adminPassword");
 
+  // Check admin login (case-insensitive)
+  if (!adminPassword || adminPassword.toLowerCase() !== "password") {
+    alert("You are not logged in. Redirecting to login...");
+    window.location.href = "index.html";
+  }
+
+  window.onload = () => {
+    const isUser = localStorage.getItem("username");
+    const isAdmin = localStorage.getItem("adminName");
+
+    if (!isUser && !isAdmin) {
+      window.location.href = "index.html";
+    }
+
+    // Show welcome message if admin
+    if (isAdmin) {
+      document.getElementById("adminStatus").textContent = `👋 Welcome, ${isAdmin}`;
+    }
+
+    // Show/hide logout button
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (isAdmin) {
+      logoutBtn.style.display = "inline-block";
+    } else {
+      logoutBtn.style.display = "none";
+    }
+  };
+
+  // Chronicle Save Logic
   chronicleForm.onsubmit = (e) => {
     e.preventDefault();
     const chronicles = JSON.parse(localStorage.getItem('churchChronicles') || '[]');
@@ -135,91 +166,185 @@
       media: chronicleMedia.value
     };
     if (chronicleIndex.value === '') {
-      chronicles.unshift(newChronicle); // add new ones to the top
+      chronicles.unshift(newChronicle);
     } else {
       chronicles[parseInt(chronicleIndex.value)] = newChronicle;
     }
     localStorage.setItem('churchChronicles', JSON.stringify(chronicles));
+    localStorage.setItem("adminUpdatedAt", Date.now());
     chronicleForm.reset();
     chronicleIndex.value = '';
     loadChroniclesPreview();
   };
 
-  function loadChroniclesPreview() {
-    const chronicles = JSON.parse(localStorage.getItem("churchChronicles") || "[]");
-    adminChroniclesList.innerHTML = "";
+  // Post Text Handler
+  document.getElementById("textPostForm").onsubmit = (e) => {
+    e.preventDefault();
+    const page = document.getElementById("textTargetPage").value;
+    const content = document.getElementById("textContent").value;
+    localStorage.setItem(`text_${page}`, content);
+    localStorage.setItem("adminUpdatedAt", Date.now());
+    alert("✅ Text posted!");
+    e.target.reset();
+  };
 
-    const upcoming = [];
-    const past = [];
-    const today = new Date().toISOString().split('T')[0];
+  // Upload Images Handler
+  document.getElementById("multiImageForm").onsubmit = (e) => {
+    e.preventDefault();
+    const page = document.getElementById("imageTargetPage").value;
+    localStorage.setItem(`images_${page}`, "uploaded");
+    localStorage.setItem("adminUpdatedAt", Date.now());
+    alert("✅ Images uploaded!");
+    e.target.reset();
+  };
 
-    chronicles.forEach((item, index) => {
-      item.index = index;
-      if (item.date >= today) {
-        upcoming.push(item);
-      } else {
-        past.push(item);
-      }
-    });
+  // Upload Media Handler
+  document.getElementById("mediaForm").onsubmit = (e) => {
+    e.preventDefault();
+    const page = document.getElementById("mediaTargetPage").value;
+    localStorage.setItem(`media_${page}`, "uploaded");
+    localStorage.setItem("adminUpdatedAt", Date.now());
+    alert("✅ Media uploaded!");
+    e.target.reset();
+  };
 
-    const createSection = (label, list) => {
-      const section = document.createElement('div');
-      section.innerHTML = `<h3 style="color:#003366;">${label}</h3>`;
-      list.forEach(item => {
-        const wrapper = document.createElement('div');
-        wrapper.style = `
-          background: #fff;
-          padding: 15px;
-          margin: 15px 0;
-          border-radius: 10px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1)
-        `;
-        const mediaBlock = item.media
-          ? item.media.endsWith('.mp4')
-            ? `<video controls style="max-width:100%;margin-top:10px;border-radius:8px;"><source src="${item.media}" type="video/mp4"></video>`
-            : `<img src="${item.media}" style="max-width:100%;margin-top:10px;border-radius:8px;" />`
-          : '';
-        wrapper.innerHTML = `
-          <h4>${item.title}</h4>
-          <small><i>${item.date}</i></small>
-          <p>${item.description}</p>
-          ${mediaBlock}
-          <div style="margin-top:10px;">
-            <button onclick="editChronicle(${item.index})" style="margin-right:10px;">✏️ Edit</button>
-            <button onclick="deleteChronicle(${item.index})" class="danger">🗑️ Delete</button>
-          </div>
-        `;
-        section.appendChild(wrapper);
-      });
-      return section;
-    };
+  // Delete Content Handler
+  document.getElementById("deleteForm").onsubmit = (e) => {
+    e.preventDefault();
+    const page = document.getElementById("deleteTargetPage").value;
+    localStorage.removeItem(`text_${page}`);
+    localStorage.removeItem(`images_${page}`);
+    localStorage.removeItem(`media_${page}`);
+    localStorage.setItem("adminUpdatedAt", Date.now());
+    alert("❌ Content cleared!");
+    e.target.reset();
+  };
+</script>
+<script>
+function postToTypedPage() {
+  const page = document.getElementById("pageName").value.trim().toLowerCase();
+  const input = document.getElementById("adminInput").value.trim();
+  if (!page || !input) return;
 
-    adminChroniclesList.appendChild(createSection('📅 Upcoming Chronicles', upcoming));
-    adminChroniclesList.appendChild(createSection('📜 Past Chronicles', past));
+  const key = `admin_post_${page}_multi`;
+  const existing = JSON.parse(localStorage.getItem(key)) || [];
+  existing.push(input);
+  localStorage.setItem(key, JSON.stringify(existing));
+
+  document.getElementById("adminInput").value = "";
+  document.getElementById("pageName").value = "";
+}
+</script>
+<script>
+function postToTypedPage() {
+  const page = document.getElementById("pageName").value.trim().toLowerCase();
+  const input = document.getElementById("adminInput").value.trim();
+  if (!page || !input) return;
+
+  const key = `admin_post_${page}_multi`;
+  const existing = JSON.parse(localStorage.getItem(key)) || [];
+  existing.push(input);
+  localStorage.setItem(key, JSON.stringify(existing));
+
+  document.getElementById("adminInput").value = "";
+  displayMessages(page); // refresh display
+}
+
+function displayMessages(page) {
+  const key = `admin_post_${page}_multi`;
+  const messages = JSON.parse(localStorage.getItem(key)) || [];
+  const container = document.getElementById("allMessages");
+
+  container.innerHTML = messages.map((msg, index) => `
+    <div style="border:1px solid #ccc;padding:10px;margin-top:10px;">
+      <p contenteditable="false" id="msg-${index}">${msg}</p>
+      <button onclick="editMessage('${page}', ${index})">Edit</button>
+      <button onclick="deleteMessage('${page}', ${index})">Delete</button>
+    </div>
+  `).join("");
+}
+
+function deleteMessage(page, index) {
+  const key = `admin_post_${page}_multi`;
+  let messages = JSON.parse(localStorage.getItem(key)) || [];
+  messages.splice(index, 1);
+  localStorage.setItem(key, JSON.stringify(messages));
+  displayMessages(page);
+}
+
+function editMessage(page, index) {
+  const msgEl = document.getElementById(`msg-${index}`);
+  if (msgEl.contentEditable === "true") {
+    msgEl.contentEditable = "false";
+    const key = `admin_post_${page}_multi`;
+    let messages = JSON.parse(localStorage.getItem(key)) || [];
+    messages[index] = msgEl.innerText.trim();
+    localStorage.setItem(key, JSON.stringify(messages));
+  } else {
+    msgEl.contentEditable = "true";
+    msgEl.focus();
+  }
+}
+</script>
+<script>
+document.getElementById("pageName").addEventListener("change", function () {
+  const page = this.value.trim().toLowerCase();
+  displayMessages(page);
+});
+</script>
+<script>
+  const adminMessages = {}; // In-memory storage
+
+  function postToTypedPage() {
+    const page = document.getElementById("pageName").value.trim().toLowerCase();
+    const input = document.getElementById("adminInput").value.trim();
+    if (!page || !input) return;
+
+    if (!adminMessages[page]) adminMessages[page] = [];
+    adminMessages[page].push(input);
+
+    document.getElementById("adminInput").value = "";
+    document.getElementById("pageName").value = "";
+    displayMessages(page);
   }
 
-  function editChronicle(index) {
-    const chronicles = JSON.parse(localStorage.getItem('churchChronicles') || '[]');
-    const c = chronicles[index];
-    chronicleTitle.value = c.title;
-    chronicleDesc.value = c.description;
-    chronicleDate.value = c.date;
-    chronicleMedia.value = c.media;
-    chronicleIndex.value = index;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  function displayMessages(page) {
+    const container = document.getElementById("allMessages");
+    const messages = adminMessages[page] || [];
+
+    container.innerHTML = messages.map((msg, index) => `
+      <div style="border:1px solid #ccc;padding:10px;margin-top:10px;">
+        <p contenteditable="false" id="msg-${index}">${msg}</p>
+        <button onclick="editMessage('${page}', ${index})">Edit</button>
+        <button onclick="deleteMessage('${page}', ${index})">Delete</button>
+      </div>
+    `).join("");
   }
 
-  function deleteChronicle(index) {
-    const chronicles = JSON.parse(localStorage.getItem('churchChronicles') || '[]');
-    if (confirm('❗ Are you sure you want to delete this chronicle?')) {
-      chronicles.splice(index, 1);
-      localStorage.setItem('churchChronicles', JSON.stringify(chronicles));
-      loadChroniclesPreview();
+  function deleteMessage(page, index) {
+    if (adminMessages[page]) {
+      adminMessages[page].splice(index, 1);
+      displayMessages(page);
     }
   }
 
-  // Load on page load
-  loadChroniclesPreview();
+  function editMessage(page, index) {
+    const msgEl = document.getElementById(`msg-${index}`);
+    if (msgEl.contentEditable === "true") {
+      msgEl.contentEditable = "false";
+      adminMessages[page][index] = msgEl.innerText.trim();
+    } else {
+      msgEl.contentEditable = "true";
+      msgEl.focus();
+    }
+  }
+
+  // Auto-display messages on page name change
+  document.getElementById("pageName").addEventListener("change", function () {
+    const page = this.value.trim().toLowerCase();
+    displayMessages(page);
+  });
 </script>
+
 </body>
 </html>
