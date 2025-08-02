@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Youth Fellowship</title>
+  <title>Mens Fellowship</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     body { font-family: Arial; background: wheat; margin: 0; }
@@ -20,13 +19,46 @@
     .message button { position: absolute; right: 8px; top: 8px; background: red; color: white; border: none; border-radius: 3px; cursor: pointer; }
     #msgInput { width: 100%; padding: 8px; font-size: 16px; margin-top: 10px; border-radius: 8px; }
     #sendBtn { padding: 10px 20px; font-size: 16px; margin-top: 5px; border-radius: 8px; background: green; color: white; border: none; cursor: pointer; }
+    .admin-message {
+      background: #fff4dc;
+      padding: 12px;
+      margin-top: 10px;
+      border-left: 5px solid orange;
+      border-radius: 6px;
+      position: relative;
+    }
+    .admin-message img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+    .controls {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+    }
+    .controls button {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
   </style>
 </head>
-<body>
+
+<body data-page="men">
   <script>
     const username = localStorage.getItem("username");
     const role = localStorage.getItem("loginType");
-    const myID = localStorage.getItem("fellowshipID");
+    let myID = localStorage.getItem("fellowshipID");
+
+    if (!myID && username) {
+      const initials = username.split(" ").map(n => n[0][0].toUpperCase()).join("");
+      myID = `${initials}-${Math.floor(100 + Math.random() * 900)}`;
+      localStorage.setItem("fellowshipID", myID);
+    }
+
     const deleted = JSON.parse(localStorage.getItem("deletedUsers") || "[]");
 
     if (!username || !role || role !== "user") {
@@ -48,19 +80,20 @@
 
   <div id="UserDetails"></div>
 
-<div class="content-box">
- <h2><i class="fas fa-user-tie"></i> Mens Fellowship</h2>
-<p>Welcome to the Men's Fellowship. Stay connected and inspired in faith and brotherhood.</p>
+  <div class="content-box">
+    <h2><i class="fas fa-user-tie"></i> Mens Fellowship</h2>
+    <p>Welcome to the Men's Fellowship. Stay connected and inspired in faith and brotherhood.</p>
 
-  <div class="messages">
-    <h3>🗣 Admin Messages</h3>
-    <div id="msgBox"></div>
-    <div id="adminControls" style="display:none;">
+    <div class="messages">
+      <h3>🗣 Admin Messages</h3>
+      <div id="adminMessages"></div>
+
+      <h3>💬 Your Messages</h3>
+      <div id="msgBox"></div>
       <input type="text" id="msgInput" placeholder="Post message..."/>
       <button id="sendBtn">Send</button>
     </div>
   </div>
-</div>
 
   <script>
     document.getElementById("UserDetails").innerHTML = `
@@ -71,15 +104,15 @@
 
     const input = document.getElementById("msgInput");
     const sendBtn = document.getElementById("sendBtn");
-    const allMessages = document.getElementById("allMessages");
+    const msgBox = document.getElementById("msgBox");
 
-    let messages = JSON.parse(localStorage.getItem("youthMessages") || "[]");
+    let messages = JSON.parse(localStorage.getItem("menMessages") || "[]");
 
     function displayMessages() {
-      allMessages.innerHTML = "";
+      msgBox.innerHTML = "";
       messages.forEach((msg, index) => {
         if (msg.id === myID) {
-          allMessages.innerHTML += `<div class="message">
+          msgBox.innerHTML += `<div class="message">
             <span>${msg.name}:</span> ${msg.text}
             <button onclick="deleteMessage(${index})">x</button>
           </div>`;
@@ -89,7 +122,7 @@
 
     function deleteMessage(i) {
       messages.splice(i, 1);
-      localStorage.setItem("youthMessages", JSON.stringify(messages));
+      localStorage.setItem("menMessages", JSON.stringify(messages));
       displayMessages();
     }
 
@@ -97,13 +130,55 @@
       const text = input.value.trim();
       if (text) {
         messages.push({ name: username, id: myID, text });
-        localStorage.setItem("youthMessages", JSON.stringify(messages));
+        localStorage.setItem("menMessages", JSON.stringify(messages));
         input.value = "";
         displayMessages();
       }
     };
 
     displayMessages();
+
+    // Admin Message Display
+    const adminKey = "admin_post_men_multi";
+    let adminMessages = JSON.parse(localStorage.getItem(adminKey) || "[]");
+
+    function renderAdminMessages() {
+      const container = document.getElementById("adminMessages");
+      container.innerHTML = "";
+
+      adminMessages.forEach((msg, i) => {
+        container.innerHTML += `
+          <div class="admin-message">
+            <div class="controls">
+              <button onclick="editAdmin(${i})">✏️</button>
+              <button onclick="deleteAdmin(${i})">🗑️</button>
+            </div>
+            <h4><i class="fa-solid fa-bullhorn"></i> Admin Message ${i + 1}</h4>
+            <p>${msg.text}</p>
+            ${msg.image ? `<img src="${msg.image}" alt="Image">` : ""}
+          </div>
+        `;
+      });
+    }
+
+    function deleteAdmin(index) {
+      if (confirm("Delete this message?")) {
+        adminMessages.splice(index, 1);
+        localStorage.setItem(adminKey, JSON.stringify(adminMessages));
+        renderAdminMessages();
+      }
+    }
+
+    function editAdmin(index) {
+      const newText = prompt("Edit admin message:", adminMessages[index].text);
+      if (newText !== null) {
+        adminMessages[index].text = newText.trim();
+        localStorage.setItem(adminKey, JSON.stringify(adminMessages));
+        renderAdminMessages();
+      }
+    }
+
+    renderAdminMessages();
   </script>
 </body>
 </html>
