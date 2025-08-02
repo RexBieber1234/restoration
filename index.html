@@ -2,99 +2,165 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>RCC | Login Page</title>
+  <title>Login | RCC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
+    * {
+      box-sizing: border-box;
+      transition: all 0.3s ease-in-out;
+    }
+
     body {
-      font-family: Arial;
-      background: wheat;
-      padding: 40px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #dceefb, #e0e7ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      animation: fadeIn 1s ease-in;
+      padding: 20px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-box {
+      background: white;
+      padding: 40px 35px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 420px;
+      border-radius: 20px;
       text-align: center;
     }
-    form {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 400px;
-      margin: auto;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+
+    .login-box h2 {
+      margin-bottom: 25px;
+      color: #333;
+      font-size: 30px;
+      font-weight: 600;
     }
-    input, select, button {
+
+    input, select {
       width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 1rem;
+      padding: 14px 16px;
+      margin: 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
     }
-    h2 {
-      margin-bottom: 20px;
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 8px rgba(79, 70, 229, 0.3);
     }
-    #info {
-      color: red;
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 17px;
       font-weight: bold;
+      margin-top: 20px;
     }
-    #adminPassword {
-      display: none;
+
+    button:hover {
+      background: #4338ca;
+      transform: scale(1.03);
+    }
+
+    .icon {
+      margin-right: 8px;
+      color: #4f46e5;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease;
+    }
+
+    .fast-login {
+      margin-top: 30px;
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+    }
+
+    @media screen and (max-width: 480px) {
+      .login-box {
+        padding: 30px 20px;
+        font-size: 16px;
+      }
+
+      .login-box h2 {
+        font-size: 26px;
+      }
+
+      input, select, button {
+        font-size: 15px;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="login-box fade-in">
+    <h2><i class="fas fa-user-lock icon"></i>LOGIN</h2>
+    <form id="loginForm">
+      <input type="text" id="name" placeholder="Your name" required />
 
-  <form id="loginForm">
-    <h2><i class="fa-solid fa-user-circle"></i> Login</h2>
-    <input type="text" id="username" placeholder="Enter your name" required />
-    
-    <select id="loginType">
-      <option value="">Select Role</option>
-      <option value="user">User</option>
-      <option value="admin">Admin</option>
-    </select>
+      <select id="role" required>
+        <option value="">Select Role</option>
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
 
-    <input type="password" id="adminPassword" placeholder="Enter Admin Password" />
+      <input type="password" id="password" placeholder="Admin Password" style="display: none;" />
 
-    <button type="submit">Login</button>
-    <p id="info"></p>
-  </form>
+      <button type="submit">
+        <i class="fas fa-sign-in-alt icon"></i>Login
+      </button>
+    </form>
 
-  <script>
-    const form = document.getElementById("loginForm");
-    const info = document.getElementById("info");
-    const adminPassInput = document.getElementById("adminPassword");
-    const loginTypeSelect = document.getElementById("loginType");
+    <!-- Fast Login Section (Inserted via JS if available) -->
+    <div id="fastLoginSection" class="fast-login"></div>
+  </div>
 
-    loginTypeSelect.addEventListener("change", () => {
-      if (loginTypeSelect.value === "admin") {
-        adminPassInput.style.display = "block";
-      } else {
-        adminPassInput.style.display = "none";
-      }
-    });
+<script>
+document.getElementById("loginForm").onsubmit = function (e) {
+  e.preventDefault();
+  const name = document.getElementById("name").value.trim();
+  const role = document.getElementById("role").value;
+  const password = document.getElementById("password").value;
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const username = document.getElementById("username").value.trim();
-      const loginType = loginTypeSelect.value;
-      const adminPass = adminPassInput.value.trim();
+  if (!role || name.length < 1) return;
 
-      if (!username || !loginType) {
-        info.textContent = "⚠️ Fill in all fields.";
-        return;
-      }
+  if (role === "admin") {
+    if (password.toLowerCase() !== "password") {
+      window.location.href = "index1.html"; // Wrong admin password → redirect to user page
+      return;
+    }
+    localStorage.setItem("adminName", name);
+    window.location.href = "admin.html"; // Correct admin credentials
+  } else {
+    const initials = name
+      .split(" ")
+      .map(n => n[0].toUpperCase())
+      .join("");
+    const fellowshipID = `${initials}-${Math.floor(100 + Math.random() * 900)}`;
+    localStorage.setItem("username", name);
+    localStorage.setItem("fellowshipID", fellowshipID);
+    localStorage.setItem("lastLogin", "user");
+    window.location.href = "index1.html"; // User page
+  }
+};
 
-      if (loginType === "admin" && adminPass.toLowerCase() !== "password") {
-        info.textContent = "❌ Incorrect admin password.";
-        return;
-      }
-
-      localStorage.setItem("username", username);
-      localStorage.setItem("loginType", loginType);
-
-      if (loginType === "admin") {
-        window.location.href = "admin.html";
-      } else {
-        window.location.href = "index1.html";
-      }
-    });
-  </script>
+</script>
 </body>
 </html>
