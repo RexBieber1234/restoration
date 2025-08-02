@@ -22,7 +22,8 @@
     #sendBtn { padding: 10px 20px; font-size: 16px; margin-top: 5px; border-radius: 8px; background: green; color: white; border: none; cursor: pointer; }
   </style>
 </head>
-<body>
+
+<body data-page="youth">
   <script>
     const username = localStorage.getItem("username");
     const role = localStorage.getItem("loginType");
@@ -38,6 +39,9 @@
       window.location.href = "indedex.html";
     }
   </script>
+<a href="javascript:history.back()" style="text-decoration:none; color: purple; font-size: 18px;">
+  <i class="fa fa-arrow-left"></i> Back
+</a>
 
   <div class="nav">
     <img src="pic.JPG" alt="Logo" />
@@ -59,49 +63,68 @@
       <button id="sendBtn">Send</button>
     </div>
   </div>
+<script>
+  document.getElementById("UserDetails").innerHTML = `
+    👤 <b>Name:</b> ${username}<br>
+    🔐 <b>Role:</b> ${role}<br>
+    🆔 <b>ID:</b> ${myID}
+  `;
 
-  <script>
-    document.getElementById("UserDetails").innerHTML = `
-      👤 <b>Name:</b> ${username}<br>
-      🔐 <b>Role:</b> ${role}<br>
-      🆔 <b>ID:</b> ${myID}
-    `;
+  const input = document.getElementById("msgInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const allMessages = document.getElementById("allMessages");
 
-    const input = document.getElementById("msgInput");
-    const sendBtn = document.getElementById("sendBtn");
-    const allMessages = document.getElementById("allMessages");
+  const messages = JSON.parse(localStorage.getItem("youthMessages") || "[]");
 
-    let messages = JSON.parse(localStorage.getItem("youthMessages") || "[]");
+  const adminMsgs = JSON.parse(localStorage.getItem("admin_post_sunday_multi") || "[]")
+    .filter(msg => msg.page === "youth");
 
-    function displayMessages() {
-      allMessages.innerHTML = "";
-      messages.forEach((msg, index) => {
-        if (msg.id === myID) {
-          allMessages.innerHTML += `<div class="message">
-            <span>${msg.name}:</span> ${msg.text}
-            <button onclick="deleteMessage(${index})">x</button>
-          </div>`;
-        }
+  function displayMessages() {
+    allMessages.innerHTML = "";
+
+    // Show admin messages first
+    if (adminMsgs.length) {
+      allMessages.innerHTML += `<h4>📣 Admin Messages</h4>`;
+      adminMsgs.forEach(msg => {
+        allMessages.innerHTML += `
+          <div class="message" style="background:#ffe0e0">
+            <span>Admin:</span> ${msg.text}
+            ${msg.image ? `<br><img src="${msg.image}" style="max-width:100%;border-radius:6px;margin-top:5px">` : ""}
+          </div>
+        `;
       });
     }
 
-    function deleteMessage(i) {
-      messages.splice(i, 1);
+    // Show user messages
+    allMessages.innerHTML += `<h4>🗨️ Your Messages</h4>`;
+    messages.forEach((msg, index) => {
+      if (msg.id === myID) {
+        allMessages.innerHTML += `<div class="message">
+          <span>${msg.name}:</span> ${msg.text}
+          <button onclick="deleteMessage(${index})">x</button>
+        </div>`;
+      }
+    });
+  }
+
+  function deleteMessage(i) {
+    messages.splice(i, 1);
+    localStorage.setItem("youthMessages", JSON.stringify(messages));
+    displayMessages();
+  }
+
+  sendBtn.onclick = () => {
+    const text = input.value.trim();
+    if (text) {
+      messages.push({ name: username, id: myID, text });
       localStorage.setItem("youthMessages", JSON.stringify(messages));
+      input.value = "";
       displayMessages();
     }
+  };
 
-    sendBtn.onclick = () => {
-      const text = input.value.trim();
-      if (text) {
-        messages.push({ name: username, id: myID, text });
-        localStorage.setItem("youthMessages", JSON.stringify(messages));
-        input.value = "";
-        displayMessages();
-      }
-    };
+  displayMessages();
+</script>
 
-    displayMessages();
-  </script>
 </body>
 </html>
