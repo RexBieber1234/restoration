@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Events Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    header {
+      background: #4a90e2;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    .admin-login {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .container {
+      padding: 1rem;
+      max-width: 900px;
+      margin: auto;
+    }
+    form {
+      background: #fff;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+      border-radius: 10px;
+      display: none;
+    }
+    input, textarea, button, select {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .event {
+      background: white;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    .event:hover {
+      transform: scale(1.02);
+    }
+    .event img, .event video, .event audio {
+      max-width: 100%;
+      margin-top: 1rem;
+      border-radius: 6px;
+    }
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .category {
+      font-weight: bold;
+      padding: 0.3rem 0.6rem;
+      border-radius: 5px;
+      display: inline-block;
+      margin-bottom: 5px;
+    }
+    .past { background: #ccc; }
+    .ongoing { background: #ff9800; color: white; }
+    .upcoming { background: #4caf50; color: white; }
+    .search-sort {
+      margin: 1rem 0;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pagination {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .pagination button {
+      margin: 5px;
+      padding: 6px 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Church Events</h1>
+    <div class="admin-login">
+      <button onclick="toggleLogin()">Admin Login</button>
+      <button onclick="logout()" id="logoutBtn" style="display:none;">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <form id="eventForm">
+      <input type="text" id="title" placeholder="Event Title" required />
+      <textarea id="description" placeholder="Event Description" required></textarea>
+      <input type="date" id="date" required />
+      <input type="file" id="file" accept="image/*,audio/*,video/*" />
+      <label><input type="checkbox" id="isSecret"> Secret Event (Admins Only)</label>
+      <button type="submit">Add Event</button>
+    </form>
+
+    <div class="search-sort">
+      <input type="text" id="search" placeholder="Search events..." />
+    </div>
+
+    <div id="events"></div>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <script>
+    let isAdmin = false;
+    let currentPage = 1;
+    const eventsPerPage = 5;
+
+    document.getElementById('eventForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+      const date = document.getElementById('date').value;
+      const isSecret = document.getElementById('isSecret').checked;
+      const fileInput = document.getElementById('file').files[0];
+      const reader = new FileReader();
+
+      if (fileInput) {
+        reader.onload = function(e) {
+          saveEvent(title, description, date, e.target.result, fileInput.type, isSecret);
+        };
+        reader.readAsDataURL(fileInput);
+      } else {
+        saveEvent(title, description, date, "", "", isSecret);
+      }
+      this.reset();
+    });
+
+function saveEvent(title, description, date, fileUrl, fileType, isSecret) {
+  const adminName = localStorage.getItem('adminName') || 'Anonymous'; // ✅ Get name
+  let events = JSON.parse(localStorage.getItem('events') || '[]');
+  events.push({
+    id: Date.now(),
+    title,
+    description,
+    date,
+    fileUrl,
+    fileType,
+    isSecret,
+    adminName // ✅ Save name
+  });
+  localStorage.setItem('events', JSON.stringify(events));
+  loadEvents();
+}
+
+    function loadEvents() {
+      let events = JSON.parse(localStorage.getItem('events') || '[]');
+
+      // Filter secret events
+      events = events.filter(e => !e.isSecret || isAdmin);
+
+      const search = document.getElementById('search').value.toLowerCase();
+      if (search) {
+        events = events.filter(e =>
+          e.title.toLowerCase().includes(search) ||
+          e.description.toLowerCase().includes(search)
+        );
+      }
+
+      const now = new Date().toISOString().split("T")[0];
+      const start = (currentPage - 1) * eventsPerPage;
+      const paginated = events.slice(start, start + eventsPerPage);
+
+      const container = document.getElementById('events');
+      container.innerHTML = '';
+
+      paginated.forEach(e => {
+        const category =
+          e.date < now ? 'past' :
+          e.date === now ? 'ongoing' :
+          'upcoming';
+
+        const div = document.createElement('div');
+        div.className = 'event';
+div.innerHTML = `
+  <span class="category ${category}">${category.toUpperCase()}</span>
+  <h3>${e.title}</h3>
+  <p>${e.description}</p>
+  <small>Date: ${e.date}</small><br>
+  <small style="font-style: italic; color: #555;">Posted by: ${e.adminName || 'Unknown'}</small>
+  ${getMediaHTML(e.fileUrl, e.fileType)}
+  ${isAdmin ? `
+    <div class="controls">
+      <button onclick="editEvent(${e.id})">Edit</button>
+      <button onclick="deleteEvent(${e.id})">Delete</button>
+    </div>
+  ` : ''}
+`;
+        container.appendChild(div);
+      });
+
+      updatePagination(events.length);
+    }
+
+    function getMediaHTML(url, type) {
+      if (!url) return '';
+      if (type.startsWith('image')) return `<img src="${url}" />`;
+      if (type.startsWith('audio')) return `<audio controls src="${url}"></audio>`;
+      if (type.startsWith('video')) return `<video controls src="${url}"></video>`;
+      return '';
+    }
+
+    function deleteEvent(id) {
+      let events = JSON.parse(localStorage.getItem('events') || '[]');
+      events = events.filter(e => e.id !== id);
+      localStorage.setItem('events', JSON.stringify(events));
+      loadEvents();
+    }
+
+    function editEvent(id) {
+      const events = JSON.parse(localStorage.getItem('events') || '[]');
+      const e = events.find(ev => ev.id === id);
+      if (!e) return;
+
+      document.getElementById('title').value = e.title;
+      document.getElementById('description').value = e.description;
+      document.getElementById('date').value = e.date;
+      document.getElementById('isSecret').checked = e.isSecret;
+      deleteEvent(id);
+      window.scrollTo(0, 0);
+    }
+
+    function toggleLogin() {
+  const name = prompt("Enter admin name:");
+  const pass = prompt("Enter password:");
+  if (pass.toLowerCase() === "password") {
+    isAdmin = true;
+    localStorage.setItem('adminName', name); // ✅ Save admin name
+    document.getElementById('eventForm').style.display = 'block';
+    document.getElementById('logoutBtn').style.display = 'inline-block';
+    loadEvents();
+  } else {
+    alert("Incorrect password.");
+  }
+}
+
+
+    function logout() {
+      isAdmin = false;
+      document.getElementById('eventForm').style.display = 'none';
+      document.getElementById('logoutBtn').style.display = 'none';
+      loadEvents();
+    }
+
+    function updatePagination(total) {
+      const pages = Math.ceil(total / eventsPerPage);
+      const pag = document.getElementById('pagination');
+      pag.innerHTML = '';
+      for (let i = 1; i <= pages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        if (i === currentPage) btn.style.fontWeight = 'bold';
+        btn.onclick = () => {
+          currentPage = i;
+          loadEvents();
+        };
+        pag.appendChild(btn);
+      }
+    }
+
+    document.getElementById('search').addEventListener('input', loadEvents);
+    window.onload = loadEvents;
+  </script>
+</body>
+</html>
