@@ -65,69 +65,65 @@
   </style>
 </head>
 <body>
-  <h1>🛠 Admin Dashboard</h1>
+<a href="javascript:history.back()" style="text-decoration:none; color: purple; font-size: 18px;">
+  <i class="fa fa-arrow-left"></i> Back
+</a>
 
-  <div style="text-align:center; margin-bottom:20px;">
+<h1>🛠 Admin Dashboard</h1>
+
+<div style="text-align:center; margin-bottom:20px;">
   <span id="adminStatus" style="color:#003366; font-weight:bold;"></span>
   <button onclick="logout()" style="background:red; color:white; padding:10px 20px; border:none; border-radius:8px; margin-left:10px;">🚪 Logout</button>
 </div>
 
-  <h2>📝 Post Text to Page</h2>
-<form>
+<h2>📝 Post Text to Page</h2>
+<form onsubmit="postToTypedPage(); return false;">
   <input type="text" id="pageName" placeholder="Enter page name (e.g. sunday)">
-<input type="text" id="adminInput" placeholder="Enter message">
-<button onclick="postToTypedPage()">Post Message</button>
-
-<div id="allMessages"></div>
-
+  <input type="text" id="adminInput" placeholder="Enter message">
+  <button type="submit">Post Message</button>
+  <div id="allMessages"></div>
 </form>
-  
-<!-- Post multiple images -->
-  <h2>🖼 Upload Multiple Images</h2>
-  <form id="multiImageForm">
-    <input type="text" id="imageTargetPage" placeholder="Page name (e.g. fellowships)" required />
-    <input type="file" id="multiImages" accept="image/*" multiple required />
-    <input type="text" id="imageCaption" placeholder="Caption (optional)" />
-    <button type="submit">✅ Upload Images</button>
-  </form>
 
-  <!-- Post audio or video -->
-  <h2>🎵📹 Post Audio or Video</h2>
-  <form id="mediaForm">
-    <input type="text" id="mediaTargetPage" placeholder="Page name (e.g. events)" required />
-    <input type="file" id="mediaFile" accept="audio/*,video/*" required />
-    <input type="text" id="mediaCaption" placeholder="Caption (optional)" />
-    <button type="submit">✅ Upload Media</button>
-  </form>
+<h2>🖼 Upload Multiple Images</h2>
+<form id="multiImageForm">
+  <input type="text" id="imageTargetPage" placeholder="Page name (e.g. fellowships)" required />
+  <input type="file" id="multiImages" accept="image/*" multiple required />
+  <input type="text" id="imageCaption" placeholder="Caption (optional)" />
+  <button type="submit">✅ Upload Images</button>
+</form>
 
-  <!-- Delete posted content -->
-  <h2>🧹 Delete Posted Content</h2>
-  <form id="deleteForm">
-    <input type="text" id="deleteTargetPage" placeholder="Page name to clear" required />
-    <button type="submit" class="danger">❌ Clear Content</button>
-  </form>
+<h2>🎵📹 Post Audio or Video</h2>
+<form id="mediaForm">
+  <input type="text" id="mediaTargetPage" placeholder="Page name (e.g. events)" required />
+  <input type="file" id="mediaFile" accept="audio/*,video/*" required />
+  <input type="text" id="mediaCaption" placeholder="Caption (optional)" />
+  <button type="submit">✅ Upload Media</button>
+</form>
 
-  <!-- 📚 Church Chronicles Manager (Updated Section) -->
-  <h2>📝 Manage Church Chronicles</h2>
-  <form id="chronicleForm">
-    <input type="text" id="chronicleTitle" placeholder="Title" required />
-    <textarea id="chronicleDesc" placeholder="Description" required></textarea>
-    <input type="date" id="chronicleDate" required />
-    <input type="url" id="chronicleMedia" placeholder="Image or Video URL (optional)" />
-    <input type="hidden" id="chronicleIndex" />
-    <button type="submit">📌 Save Chronicle</button>
-  </form>
+<h2>🧹 Delete Posted Content</h2>
+<form id="deleteForm">
+  <input type="text" id="deleteTargetPage" placeholder="Page name to clear" required />
+  <button type="submit" class="danger">❌ Clear Content</button>
+</form>
 
-  <hr />
+<h2>📝 Manage Church Chronicles</h2>
+<form id="chronicleForm">
+  <input type="text" id="chronicleTitle" placeholder="Title" required />
+  <textarea id="chronicleDesc" placeholder="Description" required></textarea>
+  <input type="date" id="chronicleDate" required />
+  <input type="url" id="chronicleMedia" placeholder="Image or Video URL (optional)" />
+  <input type="hidden" id="chronicleIndex" />
+  <button type="submit">📌 Save Chronicle</button>
+</form>
 
-  <h3>📚 All Posted Chronicles</h3>
-  <div id="adminChroniclesList" style="max-width: 800px; margin:auto;"></div>
+<hr />
+<h3>📚 All Posted Chronicles</h3>
+<div id="adminChroniclesList" style="max-width: 800px; margin:auto;"></div>
 
 <script>
   const adminName = localStorage.getItem("adminName");
   const adminPassword = localStorage.getItem("adminPassword");
 
-  // Check admin login (case-insensitive)
   if (!adminPassword || adminPassword.toLowerCase() !== "password") {
     alert("You are not logged in. Redirecting to login...");
     window.location.href = "index.html";
@@ -141,22 +137,105 @@
       window.location.href = "index.html";
     }
 
-    // Show welcome message if admin
     if (isAdmin) {
       document.getElementById("adminStatus").textContent = `👋 Welcome, ${isAdmin}`;
     }
-
-    // Show/hide logout button
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (isAdmin) {
-      logoutBtn.style.display = "inline-block";
-    } else {
-      logoutBtn.style.display = "none";
-    }
   };
 
-  // Chronicle Save Logic
-  chronicleForm.onsubmit = (e) => {
+  function logout() {
+    localStorage.removeItem("adminName");
+    localStorage.removeItem("adminPassword");
+    window.location.href = "index.html";
+  }
+
+  // Post message to typed page
+  function postToTypedPage() {
+    const page = document.getElementById("pageName").value.trim().toLowerCase();
+    const input = document.getElementById("adminInput").value.trim();
+    if (!page || !input) return;
+
+    const key = `admin_post_${page}_multi`;
+    const existing = JSON.parse(localStorage.getItem(key)) || [];
+    existing.push(input);
+    localStorage.setItem(key, JSON.stringify(existing));
+
+    document.getElementById("adminInput").value = "";
+    document.getElementById("pageName").value = "";
+    displayMessages(page);
+  }
+
+  function displayMessages(page) {
+    const key = `admin_post_${page}_multi`;
+    const messages = JSON.parse(localStorage.getItem(key)) || [];
+    const container = document.getElementById("allMessages");
+
+    container.innerHTML = messages.map((msg, index) => `
+      <div style="border:1px solid #ccc;padding:10px;margin-top:10px;">
+        <p contenteditable="false" id="msg-${index}">${msg}</p>
+        <button onclick="editMessage('${page}', ${index})">Edit</button>
+        <button onclick="deleteMessage('${page}', ${index})">Delete</button>
+      </div>
+    `).join("");
+  }
+
+  function deleteMessage(page, index) {
+    const key = `admin_post_${page}_multi`;
+    let messages = JSON.parse(localStorage.getItem(key)) || [];
+    messages.splice(index, 1);
+    localStorage.setItem(key, JSON.stringify(messages));
+    displayMessages(page);
+  }
+
+  function editMessage(page, index) {
+    const msgEl = document.getElementById(`msg-${index}`);
+    if (msgEl.contentEditable === "true") {
+      msgEl.contentEditable = "false";
+      const key = `admin_post_${page}_multi`;
+      let messages = JSON.parse(localStorage.getItem(key)) || [];
+      messages[index] = msgEl.innerText.trim();
+      localStorage.setItem(key, JSON.stringify(messages));
+    } else {
+      msgEl.contentEditable = "true";
+      msgEl.focus();
+    }
+  }
+
+  document.getElementById("pageName").addEventListener("change", function () {
+    const page = this.value.trim().toLowerCase();
+    displayMessages(page);
+  });
+
+  // Form submissions
+  document.getElementById("multiImageForm").onsubmit = (e) => {
+    e.preventDefault();
+    const page = document.getElementById("imageTargetPage").value;
+    localStorage.setItem(`images_${page}`, "uploaded");
+    localStorage.setItem("adminUpdatedAt", Date.now());
+    alert("✅ Images uploaded!");
+    e.target.reset();
+  };
+
+  document.getElementById("mediaForm").onsubmit = (e) => {
+    e.preventDefault();
+    const page = document.getElementById("mediaTargetPage").value;
+    localStorage.setItem(`media_${page}`, "uploaded");
+    localStorage.setItem("adminUpdatedAt", Date.now());
+    alert("✅ Media uploaded!");
+    e.target.reset();
+  };
+
+  document.getElementById("deleteForm").onsubmit = (e) => {
+    e.preventDefault();
+    const page = document.getElementById("deleteTargetPage").value;
+    localStorage.removeItem(`text_${page}`);
+    localStorage.removeItem(`images_${page}`);
+    localStorage.removeItem(`media_${page}`);
+    localStorage.setItem("adminUpdatedAt", Date.now());
+    alert("❌ Content cleared!");
+    e.target.reset();
+  };
+
+  document.getElementById("chronicleForm").onsubmit = (e) => {
     e.preventDefault();
     const chronicles = JSON.parse(localStorage.getItem('churchChronicles') || '[]');
     const newChronicle = {
@@ -171,180 +250,10 @@
       chronicles[parseInt(chronicleIndex.value)] = newChronicle;
     }
     localStorage.setItem('churchChronicles', JSON.stringify(chronicles));
-    localStorage.setItem("adminUpdatedAt", Date.now());
     chronicleForm.reset();
     chronicleIndex.value = '';
-    loadChroniclesPreview();
-  };
-
-  // Post Text Handler
-  document.getElementById("textPostForm").onsubmit = (e) => {
-    e.preventDefault();
-    const page = document.getElementById("textTargetPage").value;
-    const content = document.getElementById("textContent").value;
-    localStorage.setItem(`text_${page}`, content);
-    localStorage.setItem("adminUpdatedAt", Date.now());
-    alert("✅ Text posted!");
-    e.target.reset();
-  };
-
-  // Upload Images Handler
-  document.getElementById("multiImageForm").onsubmit = (e) => {
-    e.preventDefault();
-    const page = document.getElementById("imageTargetPage").value;
-    localStorage.setItem(`images_${page}`, "uploaded");
-    localStorage.setItem("adminUpdatedAt", Date.now());
-    alert("✅ Images uploaded!");
-    e.target.reset();
-  };
-
-  // Upload Media Handler
-  document.getElementById("mediaForm").onsubmit = (e) => {
-    e.preventDefault();
-    const page = document.getElementById("mediaTargetPage").value;
-    localStorage.setItem(`media_${page}`, "uploaded");
-    localStorage.setItem("adminUpdatedAt", Date.now());
-    alert("✅ Media uploaded!");
-    e.target.reset();
-  };
-
-  // Delete Content Handler
-  document.getElementById("deleteForm").onsubmit = (e) => {
-    e.preventDefault();
-    const page = document.getElementById("deleteTargetPage").value;
-    localStorage.removeItem(`text_${page}`);
-    localStorage.removeItem(`images_${page}`);
-    localStorage.removeItem(`media_${page}`);
-    localStorage.setItem("adminUpdatedAt", Date.now());
-    alert("❌ Content cleared!");
-    e.target.reset();
+    // Reload function not included here but can be added
   };
 </script>
-<script>
-function postToTypedPage() {
-  const page = document.getElementById("pageName").value.trim().toLowerCase();
-  const input = document.getElementById("adminInput").value.trim();
-  if (!page || !input) return;
-
-  const key = `admin_post_${page}_multi`;
-  const existing = JSON.parse(localStorage.getItem(key)) || [];
-  existing.push(input);
-  localStorage.setItem(key, JSON.stringify(existing));
-
-  document.getElementById("adminInput").value = "";
-  document.getElementById("pageName").value = "";
-}
-</script>
-<script>
-function postToTypedPage() {
-  const page = document.getElementById("pageName").value.trim().toLowerCase();
-  const input = document.getElementById("adminInput").value.trim();
-  if (!page || !input) return;
-
-  const key = `admin_post_${page}_multi`;
-  const existing = JSON.parse(localStorage.getItem(key)) || [];
-  existing.push(input);
-  localStorage.setItem(key, JSON.stringify(existing));
-
-  document.getElementById("adminInput").value = "";
-  displayMessages(page); // refresh display
-}
-
-function displayMessages(page) {
-  const key = `admin_post_${page}_multi`;
-  const messages = JSON.parse(localStorage.getItem(key)) || [];
-  const container = document.getElementById("allMessages");
-
-  container.innerHTML = messages.map((msg, index) => `
-    <div style="border:1px solid #ccc;padding:10px;margin-top:10px;">
-      <p contenteditable="false" id="msg-${index}">${msg}</p>
-      <button onclick="editMessage('${page}', ${index})">Edit</button>
-      <button onclick="deleteMessage('${page}', ${index})">Delete</button>
-    </div>
-  `).join("");
-}
-
-function deleteMessage(page, index) {
-  const key = `admin_post_${page}_multi`;
-  let messages = JSON.parse(localStorage.getItem(key)) || [];
-  messages.splice(index, 1);
-  localStorage.setItem(key, JSON.stringify(messages));
-  displayMessages(page);
-}
-
-function editMessage(page, index) {
-  const msgEl = document.getElementById(`msg-${index}`);
-  if (msgEl.contentEditable === "true") {
-    msgEl.contentEditable = "false";
-    const key = `admin_post_${page}_multi`;
-    let messages = JSON.parse(localStorage.getItem(key)) || [];
-    messages[index] = msgEl.innerText.trim();
-    localStorage.setItem(key, JSON.stringify(messages));
-  } else {
-    msgEl.contentEditable = "true";
-    msgEl.focus();
-  }
-}
-</script>
-<script>
-document.getElementById("pageName").addEventListener("change", function () {
-  const page = this.value.trim().toLowerCase();
-  displayMessages(page);
-});
-</script>
-<script>
-  const adminMessages = {}; // In-memory storage
-
-  function postToTypedPage() {
-    const page = document.getElementById("pageName").value.trim().toLowerCase();
-    const input = document.getElementById("adminInput").value.trim();
-    if (!page || !input) return;
-
-    if (!adminMessages[page]) adminMessages[page] = [];
-    adminMessages[page].push(input);
-
-    document.getElementById("adminInput").value = "";
-    document.getElementById("pageName").value = "";
-    displayMessages(page);
-  }
-
-  function displayMessages(page) {
-    const container = document.getElementById("allMessages");
-    const messages = adminMessages[page] || [];
-
-    container.innerHTML = messages.map((msg, index) => `
-      <div style="border:1px solid #ccc;padding:10px;margin-top:10px;">
-        <p contenteditable="false" id="msg-${index}">${msg}</p>
-        <button onclick="editMessage('${page}', ${index})">Edit</button>
-        <button onclick="deleteMessage('${page}', ${index})">Delete</button>
-      </div>
-    `).join("");
-  }
-
-  function deleteMessage(page, index) {
-    if (adminMessages[page]) {
-      adminMessages[page].splice(index, 1);
-      displayMessages(page);
-    }
-  }
-
-  function editMessage(page, index) {
-    const msgEl = document.getElementById(`msg-${index}`);
-    if (msgEl.contentEditable === "true") {
-      msgEl.contentEditable = "false";
-      adminMessages[page][index] = msgEl.innerText.trim();
-    } else {
-      msgEl.contentEditable = "true";
-      msgEl.focus();
-    }
-  }
-
-  // Auto-display messages on page name change
-  document.getElementById("pageName").addEventListener("change", function () {
-    const page = this.value.trim().toLowerCase();
-    displayMessages(page);
-  });
-</script>
-
 </body>
 </html>
