@@ -17,6 +17,10 @@
 </head>
 <body>
 
+<a href="javascript:history.back()" style="text-decoration:none; color: purple; font-size: 18px;">
+  <i class="fa fa-arrow-left"></i> Back
+</a>
+
 <div class="nav">
   <span><i class="fa-solid fa-church"></i> Junior Youth Fellowship</span>
     <a href="index1.html" class="nav-links"><i class="fa-solid fa-house"></i> Home</a>
@@ -34,18 +38,7 @@
   const username = localStorage.getItem("username");
   const role = localStorage.getItem("loginType");
   let userID = localStorage.getItem("juniorFellowshipID");
-
-  if (!username || role !== "user") {
-    alert("⚠️ Only logged-in users can access this page.");
-    window.location.href = "index.html";
-  } else {
-    if (!userID) {
-      const initials = username.split(" ").map(n => n[0].toUpperCase()).join("");
-      userID = `${initials}-${Math.floor(100 + Math.random() * 900)}`;
-      localStorage.setItem("juniorFellowshipID", userID);
-    }
-
-    document.getElementById("UserDetails").innerHTML = `
+{    document.getElementById("UserDetails").innerHTML = `
       <i class="fa-solid fa-user"></i> <b>Name:</b> ${username} &nbsp;
       <i class="fa-solid fa-lock"></i> <b>Role:</b> ${role} &nbsp;
       <i class="fa-solid fa-id-badge"></i> <b>Fellowship ID:</b> ${userID}
