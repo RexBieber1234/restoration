@@ -60,16 +60,11 @@
     }
 
     const deleted = JSON.parse(localStorage.getItem("deletedUsers") || "[]");
-
-    if (!username || !role || role !== "user") {
-      alert("⛔ Only users can access this page.");
-      window.location.href = "index.html";
-    } else if (deleted.includes(myID)) {
-      alert("⛔ You were removed by admin.");
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
   </script>
+
+    <a href="javascript:history.back()" style="text-decoration:none; color: purple; font-size: 18px;">
+  <i class="fa fa-arrow-left"></i> Back
+</a>
 
   <div class="nav">
     <img src="pic.JPG" alt="Logo" />
@@ -78,7 +73,9 @@
     <a class="nav-links" href="admin.html">Admin</a>
   </div>
 
+
   <div id="UserDetails"></div>
+
 
   <div class="content-box">
     <h2><i class="fas fa-user-tie"></i> Mens Fellowship</h2>
