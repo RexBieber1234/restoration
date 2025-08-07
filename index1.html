@@ -9,7 +9,7 @@
   <style>
     body {
       color: white;
-      background-color: wheat;
+      background-color: #f5deb3;
       margin: 0;
       padding: 0;
       font-family: Arial, sans-serif;
@@ -21,6 +21,8 @@
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
+     transition: all 0.5s ease;
+  z-index: 999;
     }
     .nav img.nav-img {
       border-radius: 10rem;
@@ -40,6 +42,28 @@
       transition: color 0.3s ease;
     }
     .nav-links:hover { color: yellow; }
+
+ nav.left {
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 200px;
+  text-align: left;
+  }
+
+ nav.right {
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 200px;
+  text-align: left;
+ }
+
+ nav.bottom {
+  bottom: 0;
+  top: auto;
+ }
+
     #UserDetails {
       background: linear-gradient(45deg,#66bfbf,rgb(94, 94, 146));
       color: white;
@@ -134,6 +158,44 @@
       background: linear-gradient(45deg, yellow, blue, orange);
       color: black;
     }
+
+#settings{
+  background-color: #808022;
+  text-align: center;
+  width: 50%;
+  padding: 1.5%;
+  margin-left: 25%;
+  border-radius: 10rem;
+}
+
+#settings label{
+font-weight: bold;
+}
+
+#settings input ,select{
+padding: 0.5%;
+width: 30%;
+border-radius: 5px;
+border: 1px solid #000;
+}
+ 
+#settings button{
+color: white;
+background: linear-gradient(-45deg, green,red);
+padding: 10px;
+border-radius: 5px;
+border: 1px solid white;
+transition: all 1s ease;
+}
+
+#settings button:hover{
+color: black;
+background:linear-gradient(45deg, green, red);
+padding: 11px;
+border-radius: 10px;
+border: 1px solid black;
+}
+
   </style>
 </head>
 <body>
@@ -199,6 +261,26 @@
     ">OK</button>
   </div>
 </div>
+
+<div id="settings">
+  <u>  <h2> Settings</h2></u>
+  <label>Background Color:</label><br>
+  <input type="color" id="bgColorPicker"><br><br>
+
+  <label>Fellowship ID:</label><br>
+  <input type="text" id="fellowshipIdInput" placeholder="Enter your fellowship ID"><br><br>
+
+  <label>Navigation Position:</label><br>
+  <select id="navPositionSelect">
+    <option value="default">Default (Top)</option>
+    <option value="left">Left</option>
+    <option value="right">Right</option>
+    <option value="bottom">Bottom</option>
+  </select><br><br>
+
+  <button onclick="saveSettings()">Save Settings</button>
+</div>
+
 
 <script>
   window.onload = () => {
@@ -322,6 +404,46 @@ function goToLogin() {
   localStorage.removeItem("username");
   window.location.href = "index.html";
 }
+
+
+</script>
+
+<script>
+  function saveSettings() {
+    const bgColor = document.getElementById('bgColorPicker').value;
+    const fellowshipId = document.getElementById('fellowshipIdInput').value;
+    const navPosition = document.getElementById('navPositionSelect').value;
+
+    localStorage.setItem('bgColor', bgColor);
+    localStorage.setItem('fellowshipId', fellowshipId);
+    localStorage.setItem('navPosition', navPosition);
+
+    applySettings();
+    alert("Settings saved!");
+  }
+
+  function applySettings() {
+    const bgColor = localStorage.getItem('bgColor');
+    const fellowshipId = localStorage.getItem('fellowshipId');
+    const navPosition = localStorage.getItem('navPosition');
+
+    if (bgColor) document.body.style.backgroundColor = bgColor;
+
+    // You can use the fellowshipId where needed
+    if (fellowshipId) console.log("Fellowship ID:", fellowshipId);
+
+    const nav = document.querySelector('nav');
+    if (nav) {
+      nav.className = ''; // Reset
+      if (navPosition === 'left') nav.classList.add('left');
+      else if (navPosition === 'right') nav.classList.add('right');
+      else if (navPosition === 'bottom') nav.classList.add('bottom');
+      else nav.className = '';
+    }
+  }
+
+  // Load saved settings on page load
+  window.onload = applySettings;
 </script>
 
 </html>
