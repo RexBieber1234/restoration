@@ -112,13 +112,16 @@
 
     <section class="section">
       <h2><i class="fas fa-calendar-alt"></i> Upcoming Events</h2>
-      <div id="upcomingContainer"></div>
+      <div id="upcomingChronicles"></div>
+      <div id="upcomingPagination" class="pagination"></div>
     </section>
 
     <section class="section">
       <h2><i class="fas fa-history"></i> Past Events</h2>
-      <div id="pastContainer"></div>
-    </section>
+    <div id="pastChronicles"></div>
+    <div id="pastPagination" class="pagination"></div>
+    <span style="color: grey; font-size: 15px;">Past chronicles get deeletd after 30days</span>
+  </section>
 
     <div id="upcomingPagination" style="margin-top: 1rem;"></div>
     <div id="pastPagination" style="margin-top: 1rem;"></div>
@@ -136,167 +139,115 @@
     </div>
   </div>
 
-  <script>
-    let chronicles = [];
-    let itemsPerPage = 5;
-    let currentPage = { upcoming: 1, past: 1 };
+<script>
+  const itemsPerPage = 3;
+  const currentPage = { upcoming: 1, past: 1 };
 
-    function loadChronicles() {
-      chronicles = JSON.parse(localStorage.getItem('churchChronicles') || '[]');
-      filterChronicles();
+  function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toDateString();
+  }
+
+  function renderMedia(mediaUrl) {
+    const ext = mediaUrl.split('.').pop().toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+      return `<img src="${mediaUrl}" alt="media" style="max-width:100%;">`;
+    } else if (['mp4', 'webm'].includes(ext)) {
+      return `<video controls style="max-width:100%;"><source src="${mediaUrl}" type="video/${ext}"></video>`;
+    } else if (['mp3', 'wav'].includes(ext)) {
+      return `<audio controls><source src="${mediaUrl}" type="audio/${ext}"></audio>`;
+    } else {
+      return `<a href="${mediaUrl}" target="_blank">View Media</a>`;
+    }
+  }
+
+  function deleteChronicle(title, date) {
+    if (confirm("Are you sure you want to delete this chronicle?")) {
+      let chronicles = JSON.parse(localStorage.getItem('churchChronicles') || '[]');
+      chronicles = chronicles.filter(c => !(c.title === title && c.date === date));
+      localStorage.setItem('churchChronicles', JSON.stringify(chronicles));
+      loadChronicles();
+    }
+  }
+
+  function renderPaginatedChronicles(list, containerId, paginationId, type) {
+    const container = document.getElementById(containerId);
+    const paginationContainer = document.getElementById(paginationId);
+    container.innerHTML = "";
+    paginationContainer.innerHTML = "";
+
+    if (list.length === 0) {
+      container.innerHTML = '<p>No chronicles available.</p>';
+      return;
     }
 
-    function filterChronicles() {
-      const query = document.getElementById('searchInput').value.toLowerCase();
-      const today = new Date().toISOString().split('T')[0];
-      const past = [];
-      const upcoming = [];
+    list.sort((a, b) => b.date.localeCompare(a.date));
+    const totalPages = Math.ceil(list.length / itemsPerPage);
+    const page = currentPage[type] || 1;
+    const start = (page - 1) * itemsPerPage;
+    const paginatedItems = list.slice(start, start + itemsPerPage);
 
-      chronicles.forEach(c => {
-        if (c.title.toLowerCase().includes(query) || c.description.toLowerCase().includes(query)) {
-          if (c.date >= today) {
-            upcoming.push(c);
-          } else {
-            past.push(c);
-          }
-        }
-      });
+    paginatedItems.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'chronicle';
+      div.innerHTML = `
+        <button style="background:#e74c3c; color:#fff; padding:0.3rem 0.6rem; border:none; border-radius:4px; cursor:pointer; float:right;"
+          onclick="deleteChronicle('${item.title}', '${item.date}')">
+          <i class="fas fa-trash"></i> Delete
+        </button>
+        <h3>${item.title}</h3>
+        <small>${formatDate(item.date)}</small>
+        <p>${item.description}</p>
+        ${item.media ? `<div class="media">${renderMedia(item.media)}</div>` : ''}
+        ${item.media ? `<a href="${item.media}" download><i class="fas fa-download"></i> Download Chronicle</a>` : ''}
+      `;
+      container.appendChild(div);
+    });
 
-      renderPaginatedChronicles(upcoming, 'upcomingContainer', 'upcomingPagination', 'upcoming');
-      renderPaginatedChronicles(past, 'pastContainer', 'pastPagination', 'past');
-    }
+    renderPaginationControls(totalPages, paginationContainer, type);
+  }
 
-    function renderPaginatedChronicles(list, containerId, paginationId, type) {
-      const container = document.getElementById(containerId);
-      const paginationContainer = document.getElementById(paginationId);
-      container.innerHTML = "";
-      paginationContainer.innerHTML = "";
-
-      if (list.length === 0) {
-        container.innerHTML = '<p>No chronicles available.</p>';
-        return;
-      }
-
-      list.sort((a, b) => b.date.localeCompare(a.date));
-      const totalPages = Math.ceil(list.length / itemsPerPage);
-      const page = currentPage[type] || 1;
-      const start = (page - 1) * itemsPerPage;
-      const paginatedItems = list.slice(start, start + itemsPerPage);
-
-      paginatedItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'chronicle';
-        div.innerHTML = `
-          <button class="narrate-btn" onclick="narrate('${item.title} ${item.description}')">
-            <i class="fas fa-volume-up"></i> Narrate
-          </button>
-          <h3>${item.title}</h3>
-          <small>${formatDate(item.date)}</small>
-          <p>${item.description}</p>
-          ${item.media ? `<div class="media">${renderMedia(item.media)}</div>` : ''}
-          ${item.media ? `<a href="${item.media}" download><i class="fas fa-download"></i> Download Chronicle</a>` : ''}
-        `;
-        container.appendChild(div);
-      });
-
-      renderPaginationControls(totalPages, paginationContainer, type);
-    }
-
-    function renderPaginationControls(totalPages, container, type) {
-      const page = currentPage[type];
-      if (totalPages <= 1) return;
-
-      const wrapper = document.createElement('div');
-      wrapper.style = "margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;";
-
-      const createButton = (html, pageNumber, isActive = false) => {
-        const btn = document.createElement('button');
-        btn.innerHTML = html;
-        btn.style = `
-          padding: 6px 12px;
-          border: none;
-          border-radius: 4px;
-          background: ${isActive ? '#2c3e50' : '#ccc'};
-          color: ${isActive ? '#fff' : '#000'};
-          cursor: pointer;
-        `;
-        btn.onclick = () => {
-          currentPage[type] = pageNumber;
-          filterChronicles();
-        };
-        return btn;
+  function renderPaginationControls(totalPages, container, type) {
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.onclick = () => {
+        currentPage[type] = i;
+        loadChronicles();
       };
-
-      if (page > 1) wrapper.appendChild(createButton('<i class="fas fa-backward"></i> Prev', page - 1));
-      for (let i = 1; i <= totalPages; i++) {
-        wrapper.appendChild(createButton(i, i, i === page));
-      }
-      if (page < totalPages) wrapper.appendChild(createButton('Next <i class="fas fa-forward"></i>', page + 1));
-
-      container.appendChild(wrapper);
+      if (i === currentPage[type]) btn.classList.add('active');
+      container.appendChild(btn);
     }
+  }
 
-    function formatDate(isoDate) {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(isoDate).toLocaleDateString(undefined, options);
-    }
+  function removeOldChronicles() {
+    const chronicles = JSON.parse(localStorage.getItem('churchChronicles') || '[]');
+    const now = new Date();
+    const filtered = chronicles.filter(c => {
+      const diff = (now - new Date(c.date)) / (1000 * 60 * 60 * 24); // Days
+      return diff < 30; // keep only if less than 30 days old
+    });
+    localStorage.setItem('churchChronicles', JSON.stringify(filtered));
+  }
 
-    function renderMedia(media) {
-      const ext = media.split('.').pop().toLowerCase();
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-        return `<img src="${media}" alt="Image" onclick="openLightbox('${media}')" onerror="handleMediaError(this, '${media}')">`;
-      }
-      if (['mp4', 'webm'].includes(ext)) {
-        return `<video controls width="300" onerror="handleMediaError(this, '${media}')">
-                  <source src="${media}" type="video/${ext}">
-                </video>`;
-      }
-      if (['mp3', 'wav', 'ogg'].includes(ext)) {
-        return `<audio controls onerror="handleMediaError(this, '${media}')">
-                  <source src="${media}" type="audio/${ext}">
-                </audio>`;
-      }
-      if (ext === 'pdf') {
-        return `<div><i class="fas fa-file-pdf fa-2x text-red-600"></i> <a href="${media}" target="_blank">View PDF</a></div>`;
-      }
-      return `<div onclick="openModal('${media}')">
-                <img src="https://via.placeholder.com/300x200?text=Unsupported+Media" alt="Unsupported">
-                <p style="color: red;">Media not supported. Click to open in new page.</p>
-              </div>`;
-    }
+  function loadChronicles() {
+    removeOldChronicles();
+    const chronicles = JSON.parse(localStorage.getItem('churchChronicles') || '[]');
+    const today = new Date().toISOString().split('T')[0];
+    const upcoming = chronicles.filter(c => c.date >= today);
+    const past = chronicles.filter(c => c.date < today);
+    renderPaginatedChronicles(upcoming, 'upcomingChronicles', 'upcomingPagination', 'upcoming');
+    renderPaginatedChronicles(past, 'pastChronicles', 'pastPagination', 'past');
+  }
 
-    function handleMediaError(el, media) {
-      el.outerHTML = `<div onclick="openModal('${media}')">
-        <img src="https://via.placeholder.com/300x200?text=Media+Error" alt="Error">
-        <p style="color: red;">Media failed to load. Click to open externally.</p>
-      </div>`;
-    }
+  // Real-time sync across tabs
+  window.addEventListener('storage', () => {
+    loadChronicles();
+  });
 
-    function openModal(link) {
-      document.getElementById('modalContent').innerHTML = `<iframe src="${link}" width="100%" height="400px" style="border:none;"></iframe>`;
-      document.getElementById('mediaModal').style.display = "block";
-    }
+  loadChronicles();
 
-    function closeModal() {
-      document.getElementById('mediaModal').style.display = "none";
-    }
+</script>
 
-    function openLightbox(src) {
-      document.getElementById('lightbox-img').src = src;
-      document.getElementById('lightbox').style.display = "flex";
-    }
-
-    function closeLightbox() {
-      document.getElementById('lightbox').style.display = "none";
-    }
-
-    function narrate(text) {
-      const msg = new SpeechSynthesisUtterance(text);
-      msg.lang = 'en-US';
-      window.speechSynthesis.speak(msg);
-    }
-
-    window.onload = loadChronicles;
-  </script>
 </body>
 </html>
