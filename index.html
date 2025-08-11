@@ -121,6 +121,7 @@
         <option value="admin">Admin</option>
       </select>
 
+      <!-- Hidden password field for Admin -->
       <input type="password" id="password" placeholder="Admin Password" style="display: none;" />
 
       <button type="submit">
@@ -128,11 +129,23 @@
       </button>
     </form>
 
-    <!-- Fast Login Section (Inserted via JS if available) -->
     <div id="fastLoginSection" class="fast-login"></div>
   </div>
 
 <script>
+// Show/hide password input based on role selection
+document.getElementById("role").addEventListener("change", function() {
+  const passwordField = document.getElementById("password");
+  if (this.value === "admin") {
+    passwordField.style.display = "block";
+    passwordField.required = true;
+  } else {
+    passwordField.style.display = "none";
+    passwordField.required = false;
+    passwordField.value = "";
+  }
+});
+
 document.getElementById("loginForm").onsubmit = function (e) {
   e.preventDefault();
   const name = document.getElementById("name").value.trim();
@@ -147,7 +160,7 @@ document.getElementById("loginForm").onsubmit = function (e) {
       return;
     }
     localStorage.setItem("adminName", name);
-    window.location.href = "admin.html"; // Correct admin credentials
+    window.location.href = "admin-login.html"; // Correct admin credentials
   } else {
     const initials = name
       .split(" ")
@@ -160,7 +173,6 @@ document.getElementById("loginForm").onsubmit = function (e) {
     window.location.href = "index1.html"; // User page
   }
 };
-
 </script>
 </body>
 </html>
