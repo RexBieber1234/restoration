@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -445,8 +446,17 @@ button:hover {
 
 <div class="settings-container">
   <h2>Settings</h2>
+  
   <label for="bgColor">Background Color:</label>
   <input type="color" id="bgColor">
+
+  <label>
+    <input type="checkbox" id="glowBg"> Enable Glowing Background
+  </label>
+
+  <label>
+    <input type="checkbox" id="livePreview"> Enable Live Preview
+  </label>
 
   <label for="fellowshipID">Fellowship ID:</label>
   <input type="text" id="fellowshipID">
@@ -460,6 +470,7 @@ button:hover {
   </select>
 
   <button type="button" onclick="saveSettings()">Save</button>
+  <button type="button" onclick="restorePreviousBg()">Restore Previous Background</button>
 </div>
 
 
@@ -590,38 +601,114 @@ function goToLogin() {
 </script>
 
 <script>
-  function saveSettings() {
-    const bgColor = document.getElementById('bgColorPicker').value;
-    const fellowshipId = document.getElementById('fellowshipIdInput').value;
-    const navPosition = document.getElementById('navPositionSelect').value;
+ let previousBgColor = localStorage.getItem('bgColor') || '#f5deb3';
 
-    localStorage.setItem('bgColor', bgColor);
-    localStorage.setItem('fellowshipId', fellowshipId);
-    localStorage.setItem('navPosition', navPosition);
+function saveSettings() {
+  const bgColor = document.getElementById('bgColor').value;
+  const glowBg = document.getElementById('glowBg').checked;
+  const livePreview = document.getElementById('livePreview').checked;
+  const fellowshipId = document.getElementById('fellowshipID').value;
+  const navPosition = document.getElementById('navPosition').value;
 
-    applySettings();
-    alert("Settings saved!");
+  previousBgColor = localStorage.getItem('bgColor') || '#f5deb3';
+  localStorage.setItem('previousBgColor', previousBgColor);
+
+  localStorage.setItem('bgColor', bgColor);
+  localStorage.setItem('glowBg', glowBg ? 'true' : 'false');
+  localStorage.setItem('livePreview', livePreview ? 'true' : 'false');
+  localStorage.setItem('fellowshipId', fellowshipId);
+  localStorage.setItem('navPosition', navPosition);
+
+  applySettings();
+  alert("Settings saved!");
+}
+
+function applySettings() {
+  let bg = localStorage.getItem('bgColor');
+  let glow1 = localStorage.getItem('glowColor1');
+  let glow2 = localStorage.getItem('glowColor2');
+
+  if (glow1 && glow2) {
+    // Apply glowing gradient
+    document.body.style.background = `linear-gradient(45deg, ${glow1}, ${glow2})`;
+    document.body.style.backgroundSize = "200% 200%";
+    document.body.style.animation = "glowAnim 5s ease infinite";
+  } else if (bg) {
+    // Apply plain background
+    document.body.style.background = bg;
+    document.body.style.animation = "none";
   }
+}
 
-  function applySettings() {
-    const bgColor = localStorage.getItem('bgColor');
-    const fellowshipId = localStorage.getItem('fellowshipId');
-    const navPosition = localStorage.getItem('navPosition');
+function saveSettings() {
+  localStorage.setItem('bgColor', document.getElementById('bgColor').value);
+  localStorage.setItem('glowColor1', document.getElementById('glowColor1').value);
+  localStorage.setItem('glowColor2', document.getElementById('glowColor2').value);
+  localStorage.setItem('fellowshipId', document.getElementById('fellowshipId').value);
+  localStorage.setItem('navPosition', document.getElementById('navPosition').value);
+  applySettings();
+}
 
-    if (bgColor) document.body.style.backgroundColor = bgColor;
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('bgColor').value = localStorage.getItem('bgColor') || '#ffffff';
+  document.getElementById('glowColor1').value = localStorage.getItem('glowColor1') || '#ff0000';
+  document.getElementById('glowColor2').value = localStorage.getItem('glowColor2') || '#0000ff';
+  document.getElementById('fellowshipId').value = localStorage.getItem('fellowshipId') || '';
+  document.getElementById('navPosition').value = localStorage.getItem('navPosition') || 'default';
+  applySettings();
+});
 
-    // You can use the fellowshipId where needed
-    if (fellowshipId) console.log("Fellowship ID:", fellowshipId);
+function restorePreviousBg() {
+  const prev = localStorage.getItem('previousBgColor');
+  if (prev) {
+    document.body.style.backgroundColor = prev;
+    document.getElementById('bgColor').value = prev;
+    localStorage.setItem('bgColor', prev);
+    localStorage.setItem('glowBg', 'false');
+    document.body.classList.remove('glowing-background');
+    alert("Previous background restored!");
+  } else {
+    alert("No previous background saved.");
+  }
+}
 
-    const nav = document.querySelector('nav');
-    if (nav) {
-      nav.className = ''; // Reset
-      if (navPosition === 'left') nav.classList.add('left');
-      else if (navPosition === 'right') nav.classList.add('right');
-      else if (navPosition === 'bottom') nav.classList.add('bottom');
-      else nav.className = '';
+// Live Preview listener
+document.addEventListener("DOMContentLoaded", () => {
+  applySettings();
+
+  document.getElementById('bgColor').addEventListener('input', () => {
+    if (document.getElementById('livePreview').checked) {
+      document.body.style.backgroundColor = document.getElementById('bgColor').value;
     }
+  });
+
+  document.getElementById('glowBg').addEventListener('change', () => {
+    if (document.getElementById('livePreview').checked) {
+      if (document.getElementById('glowBg').checked) {
+        document.body.classList.add('glowing-background');
+      } else {
+        document.body.classList.remove('glowing-background');
+      }
+    }
+  });
+});
+
+function restorePreviousBg() {
+  const prev = localStorage.getItem('previousBgColor');
+  if (prev) {
+    document.body.style.backgroundColor = prev;
+    document.getElementById('bgColor').value = prev;
+    localStorage.setItem('bgColor', prev);
+    localStorage.setItem('glowBg', 'false'); // turn off glow when restoring
+    document.body.classList.remove('glowing-background');
+    alert("Previous background restored!");
+  } else {
+    alert("No previous background saved.");
   }
+}
+
+// Apply settings on load
+window.addEventListener('DOMContentLoaded', applySettings);
 
   // Load saved settings on page load
   window.onload = applySettings;
@@ -686,5 +773,43 @@ function searchPage() {
 </script>
 
 </html>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
 </body>
 </html>
