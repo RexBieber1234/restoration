@@ -63,6 +63,7 @@
   bottom: 0;
   top: auto;
  }
+
     #UserDetails {
       background: linear-gradient(45deg,#66bfbf,rgb(94, 94, 146));
       color: white;
@@ -72,7 +73,6 @@
       margin: 10 auto;
       z-index: 10;
     }
-
     #typewriter {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 24px;
@@ -108,6 +108,44 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
+
+    /* Church Categories Animation */
+.church-categories {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: categoriesIn 1s ease-out forwards;
+}
+
+@keyframes categoriesIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.church-categories .category {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: categoriesIn 0.8s ease-out forwards;
+}
+
+.church-categories .category:nth-child(1) {
+  animation-delay: 0.2s;
+}
+.church-categories .category:nth-child(2) {
+  animation-delay: 0.4s;
+}
+.church-categories .category:nth-child(3) {
+  animation-delay: 0.6s;
+}
+.church-categories .category:nth-child(4) {
+  animation-delay: 0.8s;
+}
+
     .btn1 { background-color: yellow; color: black; }
     .btn1:hover { background-color: white; color: orange; }
     .btn2 { background-color: blue; color: white; }
@@ -156,44 +194,184 @@
       color: black;
     }
 
-#settings{
-  background-color: #808022;
+@keyframes slideFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Glowing button hover effect */
+@keyframes glow {
+  0% { box-shadow: 0 0 5px rgba(255,255,255,0.3); }
+  50% { box-shadow: 0 0 20px rgba(255,255,0,0.8); }
+  100% { box-shadow: 0 0 5px rgba(255,255,255,0.3); }
+}
+
+/* Apply to settings box */
+#settings {
+  animation: slideFadeIn 1s ease forwards;
+}
+
+/* Apply to all buttons on hover */
+button:hover {
+  animation: glow 1.5s ease-in-out infinite;
+  transform: scale(1.05);
+}
+
+/* Update notice pop-in */
+#updateNotice > div {
+  animation: popIn 0.5s ease forwards;
+}
+
+/* Smooth transition for typewriter text fade */
+#typewriter {
+  transition: opacity 1s ease-in-out;
+
+  /* Settings Container */
+.settings-container {
+  max-width: 450px;
+  margin: 40px auto;
+  background: linear-gradient(135deg, #ffffff, #f8f9ff);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  animation: fadeSlideIn 0.8s ease-out forwards;
+}
+
+/* Title */
+.settings-container h2 {
   text-align: center;
-  width: 50%;
-  padding: 1.5%;
-  margin-left: 25%;
-  border-radius: 10rem;
+  font-size: 1.5rem;
+  color: #444;
+  margin-bottom: 20px;
 }
 
-#settings label{
-font-weight: bold;
+/* Labels */
+.settings-container label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+  color: #555;
 }
 
-#settings input ,select{
-padding: 0.5%;
-width: 30%;
-border-radius: 5px;
-border: 1px solid #000;
-}
- 
-#settings button{
-color: white;
-background: linear-gradient(-45deg, green,red);
-padding: 10px;
-border-radius: 5px;
-border: 1px solid white;
-transition: all 1s ease;
+/* Inputs, Selects */
+.settings-container input,
+.settings-container select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+  font-size: 1rem;
 }
 
-#settings button:hover{
-color: black;
-background:linear-gradient(45deg, green, red);
-padding: 11px;
-border-radius: 10px;
-border: 1px solid black;
+.settings-container input:focus,
+.settings-container select:focus {
+  border-color: #4e73df;
+  box-shadow: 0 0 8px rgba(78, 115, 223, 0.4);
 }
 
-  </style>
+/* Save Button */
+.settings-container button {
+  width: 100%;
+  padding: 12px;
+  background: #4e73df;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.settings-container button:hover {
+  background: #3b5dc9;
+  transform: translateY(-2px);
+}
+
+/* Animation for Form */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+}
+
+#searchOverlay {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  max-width: 500px;
+  background: rgba(0,0,0,0.9);
+  padding: 15px;
+  border-radius: 10px;
+  display: none;
+  z-index: 10000;
+  box-shadow: 0 0 20px rgba(255,255,0,0.8);
+  animation: glowPulse 1.5s infinite;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+
+#searchResults {
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  color: black;
+  border-radius: 8px;
+  padding: 5px;
+}
+
+#searchResults div {
+  padding: 5px;
+  cursor: pointer;
+}
+
+#searchResults div:hover {
+  background: #ddd;
+}
+
+/* Glow animation */
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 10px yellow; }
+  50% { box-shadow: 0 0 25px orange; }
+  100% { box-shadow: 0 0 10px yellow; }
+}
+</style>
 </head>
 <body>
   <div id="UserDetails"></div>
@@ -201,7 +379,7 @@ border: 1px solid black;
     <img class="nav-img" src="pic.JPG" alt="Church Logo" />
     <span class="nav-brand"><i>Restoration Christian Church</i></span>
     <a class="nav-links" href="#home"><i class="fa-solid fa-house"></i> Home</a>
-    <a class="nav-links" href="#about"><i class="fa-solid fa-book"></i> About</a>
+    <a class="nav-links" href="about.html"><i class="fa-solid fa-book"></i> About</a>
     <a class="nav-links" href="events.html"><i class="fa-solid fa-calendar-days"></i> Events</a>
     <a class="nav-links" href="join.html"><i class="fa-solid fa-user-plus"></i> Join</a>
     <a class="nav-links" href="quiz.html"><i class="fa-solid fa-puzzle-piece"></i> Bible Quiz</a>
@@ -209,6 +387,12 @@ border: 1px solid black;
     <a class="nav-links" href="video-call.html" target="_blank"><i class="fa-solid fa-video"></i> Video-call</a>
     <a class="nav-links" href="admin-login.html" target="_blank"><i class="fa-solid fa-user-circle"></i> Admin</a>
   </div>
+
+  <div id="searchOverlay">
+<input type="text" id="searchBox" placeholder="Search..." />
+  <div id="searchResults"></div>
+</div>
+
   <main>
     <h2 id="typewriter"></h2>
     <section class="Church-cartegories">
@@ -258,25 +442,24 @@ border: 1px solid black;
     ">OK</button>
   </div>
 </div>
-<hr>
-  
-<div id="settings">
-  <u>  <h2> Settings</h2></u>
-  <label>Background Color:</label><br>
-  <input type="color" id="bgColorPicker"><br><br>
 
-  <label>Fellowship ID:</label><br>
-  <input type="text" id="fellowshipIdInput" placeholder="Enter your fellowship ID"><br><br>
+<div class="settings-container">
+  <h2>Settings</h2>
+  <label for="bgColor">Background Color:</label>
+  <input type="color" id="bgColor">
 
-  <label>Navigation Position:</label><br>
-  <select id="navPositionSelect">
-    <option value="default">Default (Top)</option>
+  <label for="fellowshipID">Fellowship ID:</label>
+  <input type="text" id="fellowshipID">
+
+  <label for="navPosition">Navigation Position:</label>
+  <select id="navPosition">
+    <option value="default">Default</option>
     <option value="left">Left</option>
     <option value="right">Right</option>
     <option value="bottom">Bottom</option>
-  </select><br><br>
+  </select>
 
-  <button onclick="saveSettings()">Save Settings</button>
+  <button type="button" onclick="saveSettings()">Save</button>
 </div>
 
 
@@ -442,11 +625,66 @@ function goToLogin() {
 
   // Load saved settings on page load
   window.onload = applySettings;
+
+let searchVisible = false;
+document.addEventListener("keydown", function(e) {
+    if (e.ctrlKey && e.key.toLowerCase() === "l") {
+        e.preventDefault(); // Prevent browser address bar focus
+        const searchInput = document.getElementById("searchBox");
+        if (searchInput) {
+            searchInput.focus();
+        }
+    }
+});
+
+function toggleSearch() {
+  const overlay = document.getElementById("searchOverlay");
+  searchVisible = !searchVisible;
+  overlay.style.display = searchVisible ? "block" : "none";
+  if (searchVisible) document.getElementById("searchInput").focus();
+}
+
+function closeSearch() {
+  document.getElementById("searchOverlay").style.display = "none";
+  searchVisible = false;
+}
+
+function searchPage() {
+  const query = document.getElementById("searchInput").value.toLowerCase();
+  const resultsDiv = document.getElementById("searchResults");
+  resultsDiv.innerHTML = "";
+
+  if (query.trim() === "") return;
+
+  // Get all text-containing elements
+  const elements = document.querySelectorAll("body *:not(script):not(style):not(input):not(textarea)");
+  let results = [];
+
+  elements.forEach(el => {
+    if (el.children.length === 0 && el.textContent.toLowerCase().includes(query)) {
+      results.push({ text: el.textContent.trim(), element: el });
+    }
+  });
+
+  if (results.length === 0) {
+    resultsDiv.innerHTML = "<div>No matches found</div>";
+    return;
+  }
+
+  results.forEach(r => {
+    const div = document.createElement("div");
+    div.innerHTML = r.text.replace(new RegExp(query, "gi"), match => `<mark>${match}</mark>`);
+    div.onclick = () => {
+      r.element.scrollIntoView({ behavior: "smooth", block: "center" });
+      closeSearch();
+    };
+    resultsDiv.appendChild(div);
+  });
+}
+
+
 </script>
 
 </html>
 </body>
 </html>
-
-
-
