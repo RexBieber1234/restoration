@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,66 +6,148 @@
   <title>RCC CALL PAGE</title>
   <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    h2 {
-      margin-top: 10px;
-    }
-    #videos {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .video-container {
-      position: relative;
-      width: 30%;
-      margin: 10px;
-    }
-    video {
-      width: 100%;
-      border-radius: 10px;
-      border: 2px solid #333;
-    }
-    .username-label {
-      position: absolute;
-      bottom: 5px;
-      left: 5px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 3px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-    .controls {
-      margin: 15px;
-    }
-    button, input {
-      padding: 8px 10px;
-      font-size: 14px;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
-    }
-    #my-id {
-      font-weight: bold;
-    }
-    #duration {
-      margin: 10px;
-      font-weight: bold;
-      color: lightgreen;
-    }
-    @media (max-width: 768px) {
-      .video-container {
-        width: 90%;
-      }
-    }
-  </style>
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background-color: #fff9c4; /* pale yellow base */
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 191, 0, 0.4) 0%,    /* amber center */
+    rgba(32, 178, 170, 0.25) 40%, /* sea blue mid */
+    rgba(169, 169, 169, 0.15) 70%,/* light black fade */
+    rgba(220, 220, 220, 0.05) 100% /* dark white edge */
+  );
+  background-size: cover;
+  background-attachment: fixed;
+  animation: pageGlow 6s ease-in-out infinite;
+}
+
+@keyframes pageGlow {
+  0%, 100% {
+    background-image: radial-gradient(
+      circle,
+      rgba(255, 191, 0, 0.5) 0%,
+      rgba(32, 178, 170, 0.3) 40%,
+      rgba(169, 169, 169, 0.15) 70%,
+      rgba(220, 220, 220, 0.05) 100%
+    );
+  }
+  50% {
+    background-image: radial-gradient(
+      circle,
+      rgba(255, 191, 0, 0.65) 0%,
+      rgba(32, 178, 170, 0.4) 40%,
+      rgba(169, 169, 169, 0.2) 70%,
+      rgba(220, 220, 220, 0.08) 100%
+    );
+  }
+
+}
+
+.controls button {
+  padding: 14px 22px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffbf00, #20b2aa);
+  color: #111;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow:
+    0 0 8px rgba(255, 191, 0, 0.7),
+    0 0 15px rgba(32, 178, 170, 0.6);
+  transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.2s ease;
+  user-select: none;
+}
+
+.controls button:hover {
+  background: linear-gradient(135deg, #ffd54f, #40e0d0);
+  box-shadow:
+    0 0 14px rgba(255, 215, 0, 0.9),
+    0 0 25px rgba(64, 224, 208, 0.8);
+  transform: scale(1.07);
+}
+
+.controls button:active {
+  transform: scale(0.95);
+  box-shadow:
+    0 0 8px rgba(255, 191, 0, 0.5),
+    0 0 12px rgba(32, 178, 170, 0.5);
+}
+
+.controls button:focus {
+  outline: none;
+  box-shadow:
+    0 0 20px rgba(255, 215, 0, 1),
+    0 0 35px rgba(64, 224, 208, 0.9);
+}
+
+.video-container {
+  position: relative;
+  width: 30%;
+  margin: 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 0 15px rgba(255, 191, 0, 0.6),    /* amber glow */
+    0 0 25px rgba(32, 178, 170, 0.5);    /* sea blue glow */
+  background: #222; /* dark background behind video */
+  animation: fadeInGlow 0.7s ease forwards;
+  transition: box-shadow 0.4s ease;
+  cursor: pointer;
+}
+
+.video-container:hover {
+  box-shadow:
+    0 0 25px rgba(255, 215, 0, 0.9),
+    0 0 40px rgba(64, 224, 208, 0.8);
+  transform: scale(1.03);
+}
+
+.video-container video {
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  display: block;
+}
+
+.username-label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #fff;
+  text-shadow: 0 0 4px rgba(0,0,0,0.7);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Animation for video box entrance */
+@keyframes fadeInGlow {
+  0% {
+    opacity: 0;
+    box-shadow:
+      0 0 0 rgba(255, 191, 0, 0),
+      0 0 0 rgba(32, 178, 170, 0);
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    box-shadow:
+      0 0 15px rgba(255, 191, 0, 0.6),
+      0 0 25px rgba(32, 178, 170, 0.5);
+    transform: scale(1);
+  }
+}
+
+</style>
+
 </head>
 <body>
 
