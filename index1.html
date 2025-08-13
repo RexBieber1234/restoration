@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Restoration Christian Church</title>
+  <title> Restoration Christian Church</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link rel="icon" href="pic.JPG" type="image/jpg">
   <style>
@@ -24,6 +24,71 @@
      transition: all 0.5s ease;
   z-index: 999;
     }
+/* Hamburger button styles */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 25px;
+  height: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hamburger span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background: white;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+/* Animation for active state */
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translateY(8px);
+}
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translateY(-8px);
+}
+
+/* Small screen menu */
+@media screen and (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+  .nav {
+    flex-wrap: nowrap;
+  }
+  .nav a {
+    display: none;
+    width: 100%;
+    margin: 5px 0;
+    text-align: left;
+  }
+  .nav.show a {
+    display: block;
+    animation: fadeInDown 0.3s ease;
+  }
+}
+
+/* Link animation */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
     .nav img.nav-img {
       border-radius: 10rem;
       height: 50px;
@@ -376,7 +441,15 @@ button:hover {
   <div class="nav" id="home">
     <img class="nav-img" src="pic.JPG" alt="Church Logo" />
     <span class="nav-brand"><i>Restoration Christian Church</i></span>
-    <a class="nav-links" href="#home"><i class="fa-solid fa-house"></i> Home</a>
+
+  <!--Hamburger-->
+  <button class="hamburger" onclick="toggleMenu()">
+  <span></span>
+  <span></span>
+  <span></span>
+  </button>
+
+<a class="nav-links" href="#home"><i class="fa-solid fa-house"></i> Home</a>
     <a class="nav-links" href="about.html"><i class="fa-solid fa-book"></i> About</a>
     <a class="nav-links" href="events.html"><i class="fa-solid fa-calendar-days"></i> Events</a>
     <a class="nav-links" href="join.html"><i class="fa-solid fa-user-plus"></i> Join</a>
@@ -771,10 +844,15 @@ function searchPage() {
   });
 }
 
+function toggleMenu() {
+  const nav = document.querySelector('.nav');
+  const burger = document.querySelector('.hamburger');
+  nav.classList.toggle('show');
+  burger.classList.toggle('active');
+}
 
 </script>
 
 </html>
 </body>
 </html>
-
